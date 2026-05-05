@@ -86,7 +86,7 @@ class ScanpathDataset(Dataset):
 
         # deterministic 90/10 split by image
         rng = np.random.default_rng(seed)
-        images = df["image_path"].unique()
+        images = np.array(df["image_path"].unique())
         rng.shuffle(images)
         n_val = max(1, int(len(images) * 0.1))
         val_images = set(images[:n_val])

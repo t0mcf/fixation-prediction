@@ -7,6 +7,7 @@ from typing import Dict
 import timm
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 
 supported_encoders: Dict[str, str] = {
@@ -249,3 +250,196 @@ class CrossAttentionFusion(nn.Module):
         x = self.norm2(x + self.ffn(x))
 
         return x
+    
+    
+class SpatialHeatmapDecoder(nn.Module):
+    """
+    decodes history-conditioned patch tokens into spatial heatmap logits.
+
+    architecture:
+        patch tokens are reshaped back into a 2d patch grid.
+        convolutional layers and bilinear upsampling convert the patch grid
+        into heatmap logits at the target resolution.
+
+    input:
+        patch_tokens: (B, N, d_model)
+
+    output:
+        logits: (B, heatmap_size, heatmap_size)
+
+    for dinov2 vit-b/14 with 224x224 input:
+        N = 16 * 16 = 256 patches
+    """
+
+    def __init__(
+        self,
+        d_model: int = 256,
+        patch_grid_size: int = 16,
+        heatmap_size: int = 64,
+        hidden_channels: int = 256,
+        dropout: float = 0.0,
+    ) -> None:
+        super().__init__()
+
+        self.patch_grid_size = patch_grid_size
+        self.heatmap_size = heatmap_size
+
+        self.net = nn.Sequential(
+            nn.Conv2d(d_model, hidden_channels, kernel_size=3, padding=1),
+            nn.GroupNorm(num_groups=8, num_channels=hidden_channels),
+            nn.GELU(),
+            nn.Dropout2d(dropout),
+
+            # (B, hidden_channels, 16, 16) -> (B, hidden_channels // 2, 32, 32)
+            nn.Upsample(scale_factor=2, mode="bilinear", align_corners=False),
+            nn.Conv2d(hidden_channels, hidden_channels // 2, kernel_size=3, padding=1),
+            nn.GroupNorm(num_groups=8, num_channels=hidden_channels // 2),
+            nn.GELU(),
+            nn.Dropout2d(dropout),
+
+            # (B, hidden_channels // 2, 32, 32) -> (B, hidden_channels // 4, 64, 64)
+            nn.Upsample(scale_factor=2, mode="bilinear", align_corners=False),
+            nn.Conv2d(hidden_channels // 2, hidden_channels // 4, kernel_size=3, padding=1),
+            nn.GroupNorm(num_groups=8, num_channels=hidden_channels // 4),
+            nn.GELU(),
+
+            # (B, hidden_channels // 4, 64, 64) -> (B, 1, 64, 64)
+            nn.Conv2d(hidden_channels // 4, 1, kernel_size=1),
+        )
+
+    def forward(self, patch_tokens: torch.Tensor) -> torch.Tensor:
+        """
+        patch_tokens: (B, N, d_model)
+        returns: (B, heatmap_size, heatmap_size)
+        """
+        B, N, d_model = patch_tokens.shape
+        expected_n = self.patch_grid_size * self.patch_grid_size
+
+        if N != expected_n:
+            raise ValueError(
+                f"expected {expected_n} patch tokens, got {N}"
+            )
+
+        # (B, N, d_model) -> (B, d_model, 16, 16)
+        x = patch_tokens.transpose(1, 2).reshape(
+            B,
+            d_model,
+            self.patch_grid_size,
+            self.patch_grid_size,
+        )
+
+        # (B, 1, heatmap_size, heatmap_size)
+        logits = self.net(x)
+
+        return logits.squeeze(1)
+    
+    
+class ScanpathModel(nn.Module):
+    """
+    dino-based model for scanpath-conditioned next-fixation prediction.
+
+    architecture:
+        image -> frozen visual patch encoder -> image adapter
+        prefix -> scanpath encoder
+        image tokens query scanpath tokens through cross-attention
+        fused patch tokens -> spatial heatmap decoder -> log-probability heatmap
+
+    input:
+        image: (B, 3, 224, 224)
+        prefix: (B, T, 2)
+        prefix_len: (B,)
+
+    output:
+        log_heatmap: (B, heatmap_size, heatmap_size)
+    """
+    
+    def __init__(
+        self,
+        visual_encoder: str = "dinov2_base",
+        pretrained_encoder: bool = True,
+        img_size: int = 224,
+        d_model: int = 256,
+        n_heads: int = 8,
+        scanpath_layers: int = 2,
+        max_prefix_len: int = 15,
+        heatmap_size: int = 64,
+        dropout: float = 0.1,
+        decoder_hidden_channels: int = 256,
+    ) -> None:
+        super().__init__()
+
+        self.image_encoder = FrozenVisualPatchEncoder(
+            model_name=visual_encoder,
+            pretrained=pretrained_encoder,
+            img_size=img_size,
+        )
+
+        self.image_adapter = nn.Sequential(
+            nn.Linear(self.image_encoder.embed_dim, d_model),
+            nn.LayerNorm(d_model),
+        )
+
+        self.scanpath_encoder = ScanpathEncoder(
+            d_model=d_model,
+            n_heads=n_heads,
+            n_layers=scanpath_layers,
+            max_prefix_len=max_prefix_len,
+            dropout=dropout,
+        )
+
+        self.fusion = CrossAttentionFusion(
+            d_model=d_model,
+            n_heads=n_heads,
+            dropout=dropout,
+        )
+
+        self.decoder = SpatialHeatmapDecoder(
+            d_model=d_model,
+            patch_grid_size=self.image_encoder.grid_size,
+            heatmap_size=heatmap_size,
+            hidden_channels=decoder_hidden_channels,
+            dropout=dropout,
+        )
+
+        self.heatmap_size = heatmap_size
+
+    def encode_image(self, image: torch.Tensor) -> torch.Tensor:
+        """
+        image: (B, 3, 224, 224)
+        returns: (B, N, d_model)
+        """
+        patch_tokens = self.image_encoder(image)
+
+        # patch_tokens: (B, N, D) -> image_tokens: (B, N, d_model)
+        image_tokens = self.image_adapter(patch_tokens)
+
+        return image_tokens
+
+    def forward(
+        self,
+        image: torch.Tensor,
+        prefix: torch.Tensor,
+        prefix_len: torch.Tensor,
+    ) -> torch.Tensor:
+        """
+        image: (B, 3, 224, 224)
+        prefix: (B, T, 2)
+        prefix_len: (B,)
+        returns: (B, heatmap_size, heatmap_size)
+        """
+        image_tokens = self.encode_image(image)
+        scanpath_tokens = self.scanpath_encoder(prefix, prefix_len)
+
+        fused_tokens = self.fusion(
+            image_tokens=image_tokens,
+            scanpath_tokens=scanpath_tokens,
+            prefix_len=prefix_len,
+        )
+
+        logits = self.decoder(fused_tokens)
+
+        # logits: (B, H, W) -> log_heatmap: (B, H, W)
+        B = logits.shape[0]
+        log_heatmap = F.log_softmax(logits.view(B, -1), dim=-1).view_as(logits)
+
+        return log_heatmap

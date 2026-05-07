@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -55,48 +56,86 @@ def nll_loss(log_pred: torch.Tensor, target_xy: torch.Tensor) -> torch.Tensor:
     return -log_p.mean()
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--parquet-path", default="data/debug_scanpaths.parquet")
+    parser.add_argument("--max-images", type=int, default=5)
+    parser.add_argument("--batch-size", type=int, default=2)
+    parser.add_argument("--max-steps", type=int, default=50)
+    parser.add_argument("--num-workers", type=int, default=0)
+
+    parser.add_argument("--heatmap-size", type=int, default=64)
+    parser.add_argument("--heatmap-sigma", type=float, default=2.0)
+
+    parser.add_argument("--lr", type=float, default=1e-4)
+    parser.add_argument("--weight-decay", type=float, default=1e-4)
+    parser.add_argument("--grad-clip", type=float, default=1.0)
+
+    parser.add_argument("--d-model", type=int, default=256)
+    parser.add_argument("--n-heads", type=int, default=8)
+    parser.add_argument("--scanpath-layers", type=int, default=2)
+    parser.add_argument("--dropout", type=float, default=0.1)
+    parser.add_argument("--decoder-hidden-channels", type=int, default=256)
+
+    parser.add_argument(
+        "--no-pretrained-encoder",
+        action="store_true",
+        help="use randomly initialized visual encoder weights for quick shape/debug tests",
+    )
+
+    parser.add_argument("--output-dir", default="runs/debug")
+    parser.add_argument("--save-checkpoint", action="store_true")
+
+    return parser.parse_args()
+
+
 def main() -> None:
+    args = parse_args()
+
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"device: {device}", flush=True)
+    print("args:", vars(args), flush=True)
+
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     loader = make_dataloader(
         split="train",
-        batch_size=2,
-        num_workers=0,
-        max_images=5,
+        batch_size=args.batch_size,
+        num_workers=args.num_workers,
+        max_images=args.max_images,
         use_grouped_sampler=False,
-        heatmap_sigma=2.0,
-        heatmap_size=64,
-        parquet_path="data/debug_scanpaths.parquet",
+        heatmap_sigma=args.heatmap_sigma,
+        heatmap_size=args.heatmap_size,
+        parquet_path=args.parquet_path,
     )
 
     model = ScanpathModel(
         visual_encoder="dinov2_base",
-        pretrained_encoder=True,
+        pretrained_encoder=not args.no_pretrained_encoder,
         img_size=224,
-        d_model=256,
-        n_heads=8,
-        scanpath_layers=2,
+        d_model=args.d_model,
+        n_heads=args.n_heads,
+        scanpath_layers=args.scanpath_layers,
         max_prefix_len=15,
-        heatmap_size=64,
-        dropout=0.1,
-        decoder_hidden_channels=256,
+        heatmap_size=args.heatmap_size,
+        dropout=args.dropout,
+        decoder_hidden_channels=args.decoder_hidden_channels,
     ).to(device)
 
     optimizer = AdamW(
         [p for p in model.parameters() if p.requires_grad],
-        lr=1e-4,
-        weight_decay=1e-4,
+        lr=args.lr,
+        weight_decay=args.weight_decay,
     )
 
     model.train()
 
-    max_steps = 50
     step = 0
-
     print("starting debug training...", flush=True)
 
-    while step < max_steps:
+    while step < args.max_steps:
         for batch in loader:
             image = batch["image"].to(device)
             prefix = batch["prefix"].to(device)
@@ -111,6 +150,8 @@ def main() -> None:
             loss_kl = kl_loss(log_pred, heatmap)
             loss_nll = nll_loss(log_pred, target_xy)
 
+            # for the first experiments we optimize KL to stay comparable
+            # to the previous prototype, while also monitoring point NLL.
             loss = loss_kl
 
             if not torch.isfinite(loss):
@@ -120,7 +161,7 @@ def main() -> None:
 
             torch.nn.utils.clip_grad_norm_(
                 [p for p in model.parameters() if p.requires_grad],
-                max_norm=1.0,
+                max_norm=args.grad_clip,
             )
 
             optimizer.step()
@@ -137,10 +178,23 @@ def main() -> None:
                 )
 
             step += 1
-            if step >= max_steps:
+            if step >= args.max_steps:
                 break
 
     print("debug training finished", flush=True)
+
+    if args.save_checkpoint:
+        ckpt_path = output_dir / "checkpoint_debug.pt"
+        torch.save(
+            {
+                "model_state": model.state_dict(),
+                "optimizer_state": optimizer.state_dict(),
+                "step": step,
+                "args": vars(args),
+            },
+            ckpt_path,
+        )
+        print(f"saved checkpoint: {ckpt_path}", flush=True)
 
 
 if __name__ == "__main__":

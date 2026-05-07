@@ -165,3 +165,87 @@ class ScanpathEncoder(nn.Module):
         )
 
         return self.norm(x)
+    
+    
+class CrossAttentionFusion(nn.Module):
+    """
+    fuses image patch tokens with scanpath history tokens.
+
+    architecture:
+        image patch tokens are used as queries.
+        scanpath tokens are used as keys and values.
+        cross-attention updates each image patch with history information.
+        a small feed-forward block is applied afterwards.
+
+    input:
+        image_tokens: (B, N, d_model)
+        scanpath_tokens: (B, T, d_model)
+        prefix_len: (B,)
+
+    output:
+        fused_tokens: (B, N, d_model)
+    """
+
+    def __init__(
+        self,
+        d_model: int = 256,
+        n_heads: int = 8,
+        dropout: float = 0.1,
+    ) -> None:
+        super().__init__()
+
+        self.cross_attn = nn.MultiheadAttention(
+            embed_dim=d_model,
+            num_heads=n_heads,
+            dropout=dropout,
+            batch_first=True,
+        )
+
+        self.norm1 = nn.LayerNorm(d_model)
+        self.norm2 = nn.LayerNorm(d_model)
+
+        self.ffn = nn.Sequential(
+            nn.Linear(d_model, 4 * d_model),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(4 * d_model, d_model),
+            nn.Dropout(dropout),
+        )
+
+    def forward(
+        self,
+        image_tokens: torch.Tensor,
+        scanpath_tokens: torch.Tensor,
+        prefix_len: torch.Tensor,
+    ) -> torch.Tensor:
+        """
+        image_tokens: (B, N, d_model)
+        scanpath_tokens: (B, T, d_model)
+        prefix_len: (B,)
+        returns: (B, N, d_model)
+        """
+        _, T, _ = scanpath_tokens.shape
+        device = scanpath_tokens.device
+
+        # padding_mask[b, j] = true means scanpath token j is padding for sample b.
+        padding_mask = (
+            torch.arange(T, device=device).unsqueeze(0)
+            >= prefix_len.unsqueeze(1)
+        )
+
+        # attn_out: (B, N, d_model)
+        attn_out, _ = self.cross_attn(
+            query=image_tokens,
+            key=scanpath_tokens,
+            value=scanpath_tokens,
+            key_padding_mask=padding_mask,
+            need_weights=False,
+        )
+
+        # residual connection keeps the original visual patch information.
+        x = self.norm1(image_tokens + attn_out)
+
+        # feed-forward block updates each patch token independently.
+        x = self.norm2(x + self.ffn(x))
+
+        return x

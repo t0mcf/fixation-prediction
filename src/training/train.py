@@ -57,12 +57,6 @@ def parse_args() -> argparse.Namespace:
 
     # optimization
     parser.add_argument("--num-epochs", type=int, default=10)
-    parser.add_argument(
-        "--max-steps",
-        type=int,
-        default=None,
-        help="optional budget cap; if set, training stops after this many optimizer steps",
-    )
     parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument(
         "--encoder-lr-scale",
@@ -89,9 +83,7 @@ def parse_args() -> argparse.Namespace:
     # logging / validation / checkpointing
     parser.add_argument("--output-dir", default="runs/train")
     parser.add_argument("--log-every", type=int, default=20)
-    parser.add_argument("--val-every", type=int, default=500)
     parser.add_argument("--val-batches", type=int, default=50)
-    parser.add_argument("--save-every", type=int, default=1000)
     parser.add_argument("--resume", default=None, help="path to an epoch checkpoint to resume from")
 
     # wandb
@@ -129,6 +121,7 @@ def save_checkpoint(
     step: int,
     epoch: int,
     args: argparse.Namespace,
+    scaler: torch.amp.GradScaler | None = None,
     best_val_kl: float | None = None,
     best_val_nss: float | None = None,
 ) -> None:
@@ -140,10 +133,15 @@ def save_checkpoint(
         "epoch": epoch,
         "args": vars(args),
     }
+    
+    if scaler is not None:
+        ckpt["scaler_state"] = scaler.state_dict()
+    
     if best_val_kl is not None:
         ckpt["best_val_kl"] = best_val_kl
     if best_val_nss is not None:
         ckpt["best_val_nss"] = best_val_nss
+        
     torch.save(ckpt, path)
 
 
@@ -227,7 +225,7 @@ def evaluate(
 ) -> dict[str, float]:
     model.eval()
 
-    device_type = device.split(":")[0]
+    device_type = device.split(":")[0] #in case it is e.g. cuda:0 
     total_kl = 0.0
     total_nll = 0.0
     total_nss = 0.0
@@ -245,14 +243,13 @@ def evaluate(
 
         with torch.autocast(device_type=device_type, enabled=use_amp):
             log_pred = model(image, prefix, prefix_len)
-
             batch_size = image.shape[0]
 
-            value_kl = kl_loss(log_pred, heatmap)
-            value_nll = nll_loss(log_pred, target_xy)
-            value_nss = nss_score(log_pred, target_xy)
+        value_kl = kl_loss(log_pred, heatmap)
+        value_nll = nll_loss(log_pred, target_xy)
+        value_nss = nss_score(log_pred, target_xy)
 
-        total_kl += value_kl.item() * batch_size
+        total_kl += value_kl.item() * batch_size # weight with batch_size since last batch may be smaller
         total_nll += value_nll.item() * batch_size
         total_nss += value_nss.item() * batch_size
         total_samples += batch_size
@@ -280,6 +277,7 @@ def run_validation(
     val_loader: torch.utils.data.DataLoader,
     optimizer: torch.optim.Optimizer,
     scheduler: torch.optim.lr_scheduler.LambdaLR,
+    scaler: torch.amp.GradScaler,
     device: str,
     step: int,
     epoch: int,
@@ -345,6 +343,7 @@ def run_validation(
             step=step,
             epoch=epoch,
             args=args,
+            scaler=scaler,
             best_val_kl=best_val_kl,
             best_val_nss=best_val_nss,
         )
@@ -370,6 +369,7 @@ def run_validation(
             step=step,
             epoch=epoch,
             args=args,
+            scaler=scaler,
             best_val_kl=best_val_kl,
             best_val_nss=best_val_nss,
         )
@@ -399,7 +399,6 @@ def main() -> None:
     device = "cuda" if torch.cuda.is_available() else "cpu"
     device_type = device.split(":")[0]
 
-    # amp only makes sense on cuda
     use_amp = args.amp and device == "cuda"
     if args.amp and not use_amp:
         print("warning: --amp requested but device is not cuda, disabling", flush=True)
@@ -429,6 +428,7 @@ def main() -> None:
         heatmap_size=args.heatmap_size,
         parquet_path=args.parquet_path,
         imagenet_root=args.imagenet_root,
+        max_prefix_len=args.max_prefix_len,
     )
 
     val_loader = make_dataloader(
@@ -442,17 +442,15 @@ def main() -> None:
         heatmap_size=args.heatmap_size,
         parquet_path=args.parquet_path,
         imagenet_root=args.imagenet_root,
+        max_prefix_len=args.max_prefix_len,
     )
 
     steps_per_epoch = len(train_loader)
-    total_planned_steps = args.num_epochs * steps_per_epoch
+    total_steps = args.num_epochs * steps_per_epoch
 
     print(f"train batches per epoch: {steps_per_epoch}", flush=True)
     print(f"planned epochs: {args.num_epochs}", flush=True)
-    print(f"planned steps: {total_planned_steps}", flush=True)
-
-    if args.max_steps is not None:
-        print(f"max steps cap: {args.max_steps}", flush=True)
+    print(f"planned steps: {total_steps}", flush=True)
 
     model = ScanpathModel(
         visual_encoder=args.visual_encoder,
@@ -484,11 +482,7 @@ def main() -> None:
         ],
         weight_decay=args.weight_decay,
     )
-
-    total_steps = total_planned_steps
-    if args.max_steps is not None:
-        total_steps = min(total_steps, args.max_steps)
-
+    
     warmup_steps = (
         args.warmup_steps
         if args.warmup_steps > 0
@@ -511,6 +505,10 @@ def main() -> None:
         model.load_state_dict(ckpt["model_state"])
         optimizer.load_state_dict(ckpt["optimizer_state"])
         scheduler.load_state_dict(ckpt["scheduler_state"])
+        
+        if "scaler_state" in ckpt:
+            scaler.load_state_dict(ckpt["scaler_state"])
+            
         start_epoch = ckpt["epoch"] + 1
         step = ckpt["step"]
         best_val_kl = ckpt.get("best_val_kl", float("inf"))
@@ -547,12 +545,10 @@ def main() -> None:
                 with torch.autocast(device_type=device_type, enabled=use_amp):
                     log_pred = model(image, prefix, prefix_len)
 
-                    loss_kl = kl_loss(log_pred, heatmap)
-                    loss_nll = nll_loss(log_pred, target_xy)
-
-                    # optimize KL for first experiments, log NLL as diagnostic.
-                    loss = loss_kl
-
+                loss_kl = kl_loss(log_pred, heatmap)
+                loss_nll = nll_loss(log_pred, target_xy)
+                loss = loss_kl #optimizing KL for now, nll just being logged
+                
                 if not torch.isfinite(loss):
                     raise RuntimeError(f"non-finite loss at step {step}: {loss.item()}")
 
@@ -562,10 +558,13 @@ def main() -> None:
                 grad_norm = torch.nn.utils.clip_grad_norm_(
                     trainable_params,
                     max_norm=args.grad_clip,
+                    error_if_nonfinite=True,
                 )
                 scaler.step(optimizer)
                 scaler.update()
                 scheduler.step()
+                
+                step += 1
 
                 batch_size = image.shape[0]
                 epoch_float = epoch + batch_idx / max(steps_per_epoch, 1)
@@ -621,44 +620,6 @@ def main() -> None:
                         step=step,
                     )
 
-                if step > 0 and step % args.val_every == 0:
-                    best_val_kl, best_val_nss = run_validation(
-                        model=model,
-                        val_loader=val_loader,
-                        optimizer=optimizer,
-                        scheduler=scheduler,
-                        device=device,
-                        step=step,
-                        epoch=epoch,
-                        epoch_float=epoch_float,
-                        use_amp=use_amp,
-                        args=args,
-                        log_path=log_path,
-                        checkpoint_dir=checkpoint_dir,
-                        wandb_run=wandb_run,
-                        best_val_kl=best_val_kl,
-                        best_val_nss=best_val_nss,
-                    )
-
-                if step > 0 and step % args.save_every == 0:
-                    ckpt_path = checkpoint_dir / f"step_{step:06d}.pt"
-                    save_checkpoint(
-                        path=ckpt_path,
-                        model=model,
-                        optimizer=optimizer,
-                        scheduler=scheduler,
-                        step=step,
-                        epoch=epoch,
-                        args=args,
-                    )
-                    print(f"saved checkpoint: {ckpt_path}", flush=True)
-
-                step += 1
-
-                if args.max_steps is not None and step >= args.max_steps:
-                    print(f"reached max_steps={args.max_steps}, stopping early", flush=True)
-                    break
-
             mean_epoch_kl = epoch_loss_kl / max(epoch_samples, 1)
             mean_epoch_nll = epoch_loss_nll / max(epoch_samples, 1)
 
@@ -685,6 +646,7 @@ def main() -> None:
                 val_loader=val_loader,
                 optimizer=optimizer,
                 scheduler=scheduler,
+                scaler=scaler,
                 device=device,
                 step=step,
                 epoch=epoch,
@@ -708,23 +670,23 @@ def main() -> None:
                 step=step,
                 epoch=epoch,
                 args=args,
+                scaler=scaler,
                 best_val_kl=best_val_kl,
                 best_val_nss=best_val_nss,
             )
             print(f"saved epoch checkpoint: {epoch_ckpt_path}", flush=True)
 
-            if args.max_steps is not None and step >= args.max_steps:
-                break
-
         final_path = checkpoint_dir / "final.pt"
+        final_epoch = epoch if "epoch" in locals() else start_epoch - 1
         save_checkpoint(
             path=final_path,
             model=model,
             optimizer=optimizer,
             scheduler=scheduler,
             step=step,
-            epoch=args.num_epochs,
+            epoch=final_epoch,
             args=args,
+            scaler=scaler,
             best_val_kl=best_val_kl,
             best_val_nss=best_val_nss,
         )

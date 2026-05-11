@@ -54,10 +54,9 @@ class ScanpathDataset(Dataset):
 
     For a scanpath of length N, we randomly pick a step t in [1, N-1] and
     return fixations[0:t] as prefix and fixations[t] as the target heatmap.
-
     Args:
         split: "train" or "val"
-        seed: random seed for 90/10 image split
+        seed: random seed for 90/10 image split 
         max_prefix_len: maximum number of prefix fixations (pad/truncate to this)
         imagenet_root: override for ImageNet root path
         parquet_path: override for parquet path
@@ -96,7 +95,7 @@ class ScanpathDataset(Dataset):
         else:
             self.df = df[df["image_path"].isin(val_images)].reset_index(drop=True)
 
-        # max_images: limit by unique image count (matches DeepGaze III convention)
+        # max_images: limit by unique image count 
         if max_images:
             kept = self.df["image_path"].unique()[:max_images]
             self.df = self.df[self.df["image_path"].isin(kept)].reset_index(drop=True)

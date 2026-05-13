@@ -22,6 +22,7 @@ class ImageGroupedSampler(Sampler):
     def __init__(self, dataset: ScanpathDataset, paths_per_image: int = 16, seed: int = 42):
         self.paths_per_image = paths_per_image
         self.seed = seed
+        self.epoch = 0 # track epoch for deterministic shuffling across epochs
 
         # build image → [indices] map using pandas groupby (vectorised, not a Python loop)
         grouped = dataset.df.groupby("image_path", sort=False).indices
@@ -29,9 +30,13 @@ class ImageGroupedSampler(Sampler):
             idxs.tolist() for idxs in grouped.values()
             if len(idxs) >= paths_per_image
         ]
+        
+    def set_epoch(self, epoch: int):
+        # call at start of each epoch to shuffle differently across epochs while maintaining reproducibility
+        self.epoch = epoch
 
     def __iter__(self):
-        rng = np.random.default_rng(self.seed)
+        rng = np.random.default_rng(self.seed + self.epoch)
         group_order = rng.permutation(len(self.groups))
         for g in group_order:
             idxs = self.groups[g]

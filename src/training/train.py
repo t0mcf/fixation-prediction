@@ -527,6 +527,7 @@ def main() -> None:
 
     try:
         for epoch in range(start_epoch, args.num_epochs):
+            train_loader.sampler.set_epoch(epoch) # for shuffling with ImageGroupedSampler
             model.train()
 
             epoch_loss_kl = 0.0

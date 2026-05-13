@@ -14,8 +14,8 @@ root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
 
 from src.data.dataloader import make_dataloader
-from src.training.losses import kl_loss, nll_loss
-from src.training.metrics import nss_score
+from src.training.losses import kl_loss, ll_score
+from src.training.metrics import nss_score, auc_score
 
 
 default_parquet_path = (
@@ -28,10 +28,9 @@ default_imagenet_root = "/mnt/vast-nhr/projects/nim00018/datasets/ImageNet"
 
 def make_uniform_log_pred(batch_size: int, heatmap_size: int, device: str) -> torch.Tensor:
     """
-    uniform spatial baseline.
+    Uniform spatial baseline.
 
-    output:
-        log_pred: (B, H, W)
+    Predicts the same probability for every heatmap location.
     """
     H = W = heatmap_size
     logits = torch.zeros(batch_size, H, W, device=device)
@@ -45,10 +44,9 @@ def make_center_gaussian_log_pred(
     device: str,
 ) -> torch.Tensor:
     """
-    center gaussian baseline.
+    Center Gaussian baseline.
 
-    output:
-        log_pred: (B, H, W)
+    Predicts a fixed Gaussian distribution centered in the image.
     """
     H = W = heatmap_size
 
@@ -63,7 +61,6 @@ def make_center_gaussian_log_pred(
 
     logits = -((grid_x - center_x) ** 2 + (grid_y - center_y) ** 2) / (2 * sigma**2)
 
-    # logits: (H, W) -> (B, H, W)
     logits = logits.unsqueeze(0).expand(batch_size, H, W)
 
     return F.log_softmax(logits.view(batch_size, -1), dim=-1).view(batch_size, H, W)
@@ -74,7 +71,7 @@ def update_density_counts(
     target_xy: torch.Tensor,
 ) -> None:
     """
-    adds target fixation locations to a spatial count map.
+    Add target fixation locations to a spatial count map.
 
     counts:
         (H, W)
@@ -103,9 +100,9 @@ def build_empirical_density(
     smoothing: float = 1.0,
 ) -> torch.Tensor:
     """
-    builds empirical fixation density from training targets.
+    Build empirical fixation density from training targets only.
 
-    output:
+    Returns:
         log_density: (H, W)
     """
     counts = torch.full(
@@ -136,8 +133,9 @@ def evaluate_log_pred_baseline(
     max_batches: int,
 ) -> dict[str, float]:
     total_kl = 0.0
-    total_nll = 0.0
+    total_ll = 0.0
     total_nss = 0.0
+    total_auc = 0.0
     total_samples = 0
 
     with torch.no_grad():
@@ -152,20 +150,33 @@ def evaluate_log_pred_baseline(
             log_pred = make_log_pred(batch_size)
 
             value_kl = kl_loss(log_pred, heatmap)
-            value_nll = nll_loss(log_pred, target_xy)
+            value_ll = ll_score(log_pred, target_xy)
             value_nss = nss_score(log_pred, target_xy)
+            value_auc = auc_score(log_pred, target_xy)
 
             total_kl += value_kl.item() * batch_size
-            total_nll += value_nll.item() * batch_size
+            total_ll += value_ll.item() * batch_size
             total_nss += value_nss.item() * batch_size
+            total_auc += value_auc.item() * batch_size
             total_samples += batch_size
+
+    if total_samples == 0:
+        return {
+            "name": name,
+            "samples": 0,
+            "kl": float("nan"),
+            "ll": float("nan"),
+            "nss": float("nan"),
+            "auc": float("nan"),
+        }
 
     metrics = {
         "name": name,
         "samples": total_samples,
         "kl": total_kl / total_samples,
-        "nll": total_nll / total_samples,
+        "ll": total_ll / total_samples,
         "nss": total_nss / total_samples,
+        "auc": total_auc / total_samples,
     }
 
     return metrics
@@ -183,6 +194,7 @@ def parse_args() -> argparse.Namespace:
 
     parser.add_argument("--heatmap-size", type=int, default=64)
     parser.add_argument("--heatmap-sigma", type=float, default=2.0)
+    parser.add_argument("--max-prefix-len", type=int, default=15)
 
     parser.add_argument("--center-sigma", type=float, default=12.0)
     parser.add_argument("--density-smoothing", type=float, default=1.0)
@@ -197,8 +209,9 @@ def print_metrics(metrics: dict[str, float]) -> None:
         f"{metrics['name']:>18} | "
         f"samples={int(metrics['samples']):5d} | "
         f"kl={metrics['kl']:.4f} | "
-        f"nll={metrics['nll']:.4f} | "
-        f"nss={metrics['nss']:.4f}",
+        f"ll={metrics['ll']:.4f} | "
+        f"nss={metrics['nss']:.4f} | "
+        f"auc={metrics['auc']:.4f}",
         flush=True,
     )
 
@@ -219,6 +232,7 @@ def main() -> None:
         use_grouped_sampler=False,
         heatmap_sigma=args.heatmap_sigma,
         heatmap_size=args.heatmap_size,
+        max_prefix_len=args.max_prefix_len,
         parquet_path=args.parquet_path,
         imagenet_root=args.imagenet_root,
     )
@@ -232,6 +246,7 @@ def main() -> None:
         use_grouped_sampler=False,
         heatmap_sigma=args.heatmap_sigma,
         heatmap_size=args.heatmap_size,
+        max_prefix_len=args.max_prefix_len,
         parquet_path=args.parquet_path,
         imagenet_root=args.imagenet_root,
     )

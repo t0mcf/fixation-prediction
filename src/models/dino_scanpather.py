@@ -233,6 +233,8 @@ class CrossAttentionFusion(nn.Module):
             torch.arange(T, device=device).unsqueeze(0)
             >= prefix_len.unsqueeze(1)
         )
+        
+        all_padding = padding_mask.all(dim=1)
 
         # attn_out: (B, N, d_model)
         attn_out, _ = self.cross_attn(
@@ -242,6 +244,12 @@ class CrossAttentionFusion(nn.Module):
             key_padding_mask=padding_mask,
             need_weights=False,
         )
+        
+        attn_out = torch.where(
+                all_padding[:, None, None], 
+                torch.zeros_like(attn_out), 
+                attn_out
+            )
 
         # residual connection keeps the original visual patch information.
         x = self.norm1(image_tokens + attn_out)
@@ -361,6 +369,7 @@ class ScanpathModel(nn.Module):
         d_model: int = 256,
         n_heads: int = 8,
         scanpath_layers: int = 2,
+        fusion_layers: int = 1,
         max_prefix_len: int = 15,
         heatmap_size: int = 64,
         dropout: float = 0.1,
@@ -387,10 +396,17 @@ class ScanpathModel(nn.Module):
             dropout=dropout,
         )
 
-        self.fusion = CrossAttentionFusion(
-            d_model=d_model,
-            n_heads=n_heads,
-            dropout=dropout,
+        self.fusion_layers = fusion_layers
+
+        self.fusion = nn.ModuleList(
+            [
+                CrossAttentionFusion(
+                    d_model=d_model,
+                    n_heads=n_heads,
+                    dropout=dropout,
+                )
+                for _ in range(fusion_layers)
+            ]
         )
 
         self.decoder = SpatialHeatmapDecoder(
@@ -420,6 +436,7 @@ class ScanpathModel(nn.Module):
         image: torch.Tensor,
         prefix: torch.Tensor,
         prefix_len: torch.Tensor,
+        ignore_prefix: bool = False,
     ) -> torch.Tensor:
         """
         image: (B, 3, 224, 224)
@@ -428,13 +445,18 @@ class ScanpathModel(nn.Module):
         returns: (B, heatmap_size, heatmap_size)
         """
         image_tokens = self.encode_image(image)
-        scanpath_tokens = self.scanpath_encoder(prefix, prefix_len)
+        if ignore_prefix:
+            fused_tokens = image_tokens
+        else:
+            scanpath_tokens = self.scanpath_encoder(prefix, prefix_len)
 
-        fused_tokens = self.fusion(
-            image_tokens=image_tokens,
-            scanpath_tokens=scanpath_tokens,
-            prefix_len=prefix_len,
-        )
+            fused_tokens = image_tokens
+            for fusion_layer in self.fusion:
+                fused_tokens = fusion_layer(
+                    image_tokens=fused_tokens,
+                    scanpath_tokens=scanpath_tokens,
+                    prefix_len=prefix_len,
+                )
 
         logits = self.decoder(fused_tokens)
 

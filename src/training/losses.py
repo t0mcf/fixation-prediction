@@ -31,9 +31,9 @@ def kl_loss(log_pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
     )
 
 
-def nll_loss(log_pred: torch.Tensor, target_xy: torch.Tensor) -> torch.Tensor:
+def ll_score(log_pred: torch.Tensor, target_xy: torch.Tensor) -> torch.Tensor:
     """
-    negative log likelihood at the target fixation location.
+    log likelihood at the target fixation location.
 
     input:
         log_pred: (B, H, W)
@@ -43,14 +43,13 @@ def nll_loss(log_pred: torch.Tensor, target_xy: torch.Tensor) -> torch.Tensor:
         loss: scalar tensor
     """
     B, H, W = log_pred.shape
-    device = log_pred.device
-
+    
     x = target_xy[:, 0]
     y = target_xy[:, 1]
 
     col = torch.round((x + 1.0) / 2.0 * (W - 1)).long().clamp(0, W - 1)
     row = torch.round((y + 1.0) / 2.0 * (H - 1)).long().clamp(0, H - 1)
 
-    log_p = log_pred[torch.arange(B, device=device), row, col]
+    log_p = log_pred[torch.arange(B, device=log_pred.device), row, col]
 
-    return -log_p.mean()
+    return log_p.mean()

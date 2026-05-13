@@ -17,8 +17,8 @@ from torch.optim import AdamW
 
 from src.data.dataloader import make_dataloader
 from src.models.dino_scanpather import ScanpathModel
-from src.training.losses import kl_loss, nll_loss
-from src.training.metrics import nss_score
+from src.training.losses import kl_loss, ll_score
+from src.training.metrics import nss_score, auc_score
 
 
 default_parquet_path = (
@@ -40,6 +40,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--num-workers", type=int, default=4)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--paths-per-image", type=int, default=16)
+    parser.add_argument(
+    "--ignore-prefix",
+    action="store_true",
+    help="ignore scanpath history by zeroing prefix and setting prefix_len to 0",
+    )
 
     # target heatmaps
     parser.add_argument("--heatmap-size", type=int, default=64)
@@ -51,6 +56,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--d-model", type=int, default=256)
     parser.add_argument("--n-heads", type=int, default=8)
     parser.add_argument("--scanpath-layers", type=int, default=2)
+    parser.add_argument("--fusion-layers", type=int, default=1)
     parser.add_argument("--dropout", type=float, default=0.1)
     parser.add_argument("--decoder-hidden-channels", type=int, default=256)
     parser.add_argument("--max-prefix-len", type=int, default=15)
@@ -174,30 +180,23 @@ def normalize_for_image(x: torch.Tensor) -> torch.Tensor:
     return (x - x.min()) / (x.max() - x.min() + 1e-8)
 
 
-def log_wandb_heatmaps(
-    run,
-    log_pred: torch.Tensor,
-    heatmap: torch.Tensor,
-    step: int,
-) -> None:
-    if run is None:
-        return
-
+def log_wandb_heatmaps(run, log_pred, heatmap, step):
     import wandb
+    import numpy as np
 
-    pred = log_pred[0].exp()
-    target = heatmap[0]
+    pred = log_pred[0].exp().detach().float().cpu().numpy()
+    target = heatmap[0].detach().float().cpu().numpy()
 
-    pred_img = normalize_for_image(pred).numpy()
-    target_img = normalize_for_image(target).numpy()
+    pred = (pred - pred.min()) / (pred.max() - pred.min() + 1e-8)
+    target = (target - target.min()) / (target.max() - target.min() + 1e-8)
 
-    run.log(
-        {
-            "sample/pred_heatmap": wandb.Image(pred_img, caption="predicted heatmap"),
-            "sample/target_heatmap": wandb.Image(target_img, caption="target heatmap"),
-        },
-        step=step,
-    )
+    overlay = np.stack([pred, target, np.zeros_like(pred)], axis=-1)
+
+    run.log({
+        "sample/pred": wandb.Image(pred, caption="pred"),
+        "sample/target": wandb.Image(target, caption="target"),
+        "sample/overlay": wandb.Image(overlay, caption="red=pred, green=target"),
+    }, step=step)
 
 
 def make_scheduler(
@@ -214,7 +213,6 @@ def make_scheduler(
 
     return torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
 
-
 @torch.no_grad()
 def evaluate(
     model: torch.nn.Module,
@@ -222,13 +220,15 @@ def evaluate(
     device: str,
     max_batches: int,
     use_amp: bool = False,
+    ignore_prefix: bool = False,
 ) -> dict[str, float]:
     model.eval()
 
     device_type = device.split(":")[0] #in case it is e.g. cuda:0 
     total_kl = 0.0
-    total_nll = 0.0
+    total_ll = 0.0
     total_nss = 0.0
+    total_auc = 0.0
     total_samples = 0
 
     for batch_idx, batch in enumerate(loader):
@@ -238,20 +238,23 @@ def evaluate(
         image = batch["image"].to(device)
         prefix = batch["prefix"].to(device)
         prefix_len = batch["prefix_len"].to(device)
+        
         heatmap = batch["heatmap"].to(device)
         target_xy = batch["target_xy"].to(device)
 
         with torch.autocast(device_type=device_type, enabled=use_amp):
-            log_pred = model(image, prefix, prefix_len)
+            log_pred = model(image, prefix, prefix_len, ignore_prefix)
             batch_size = image.shape[0]
 
         value_kl = kl_loss(log_pred, heatmap)
-        value_nll = nll_loss(log_pred, target_xy)
+        value_ll = ll_score(log_pred, target_xy)
         value_nss = nss_score(log_pred, target_xy)
+        value_auc = auc_score(log_pred, target_xy)
 
         total_kl += value_kl.item() * batch_size # weight with batch_size since last batch may be smaller
-        total_nll += value_nll.item() * batch_size
+        total_ll += value_ll.item() * batch_size
         total_nss += value_nss.item() * batch_size
+        total_auc += value_auc.item() * batch_size
         total_samples += batch_size
 
     model.train()
@@ -259,15 +262,17 @@ def evaluate(
     if total_samples == 0:
         return {
             "val_kl": float("nan"),
-            "val_nll": float("nan"),
+            "val_ll": float("nan"),
             "val_nss": float("nan"),
+            "val_auc": float("nan"),
             "val_samples": 0,
         }
 
     return {
         "val_kl": total_kl / total_samples,
-        "val_nll": total_nll / total_samples,
+        "val_ll": total_ll / total_samples,
         "val_nss": total_nss / total_samples,
+        "val_auc": total_auc / total_samples,
         "val_samples": total_samples,
     }
 
@@ -296,6 +301,7 @@ def run_validation(
         device=device,
         max_batches=args.val_batches,
         use_amp=use_amp,
+        ignore_prefix=args.ignore_prefix,
     )
 
     val_row = {
@@ -303,8 +309,9 @@ def run_validation(
         "epoch": epoch_float,
         "split": "val",
         "kl": metrics["val_kl"],
-        "nll": metrics["val_nll"],
+        "ll": metrics["val_ll"],
         "nss": metrics["val_nss"],
+        "auc": metrics["val_auc"],
         "samples": metrics["val_samples"],
     }
 
@@ -314,8 +321,9 @@ def run_validation(
         f"epoch {epoch + 1:03d}/{args.num_epochs:03d} | "
         f"step {step:06d} | "
         f"val kl={val_row['kl']:.4f} | "
-        f"val nll={val_row['nll']:.4f} | "
+        f"val ll={val_row['ll']:.4f} | "
         f"val nss={val_row['nss']:.4f}",
+        f"val auc={val_row['auc']:.4f}",
         flush=True,
     )
 
@@ -323,10 +331,9 @@ def run_validation(
         wandb_run.log(
             {
                 "val/kl": val_row["kl"],
-                "val/nll": val_row["nll"],
+                "val/ll": val_row["ll"],
                 "val/nss": val_row["nss"],
-                "val/samples": val_row["samples"],
-                "val/epoch": epoch_float,
+                "val/auc": val_row["auc"],
             },
             step=step,
         )
@@ -354,9 +361,6 @@ def run_validation(
             flush=True,
         )
 
-        if wandb_run is not None:
-            wandb_run.log({"best/val_kl": best_val_kl}, step=step)
-
     if metrics["val_nss"] > best_val_nss:
         best_val_nss = metrics["val_nss"]
         best_path = checkpoint_dir / "best_val_nss.pt"
@@ -379,9 +383,6 @@ def run_validation(
             f"(val_nss={best_val_nss:.4f})",
             flush=True,
         )
-
-        if wandb_run is not None:
-            wandb_run.log({"best/val_nss": best_val_nss}, step=step)
 
     return best_val_kl, best_val_nss
 
@@ -436,7 +437,7 @@ def main() -> None:
         batch_size=args.batch_size,
         num_workers=args.num_workers,
         seed=args.seed,
-        max_images=args.max_images,
+        max_images=None, #so val is independent of the number of images 
         use_grouped_sampler=False,
         heatmap_sigma=args.heatmap_sigma,
         heatmap_size=args.heatmap_size,
@@ -459,6 +460,7 @@ def main() -> None:
         d_model=args.d_model,
         n_heads=args.n_heads,
         scanpath_layers=args.scanpath_layers,
+        fusion_layers=args.fusion_layers,
         max_prefix_len=args.max_prefix_len,
         heatmap_size=args.heatmap_size,
         dropout=args.dropout,
@@ -528,7 +530,7 @@ def main() -> None:
             model.train()
 
             epoch_loss_kl = 0.0
-            epoch_loss_nll = 0.0
+            epoch_loss_ll = 0.0
             epoch_samples = 0
 
             print(f"starting epoch {epoch + 1}/{args.num_epochs}", flush=True)
@@ -537,17 +539,22 @@ def main() -> None:
                 image = batch["image"].to(device)
                 prefix = batch["prefix"].to(device)
                 prefix_len = batch["prefix_len"].to(device)
+                    
                 heatmap = batch["heatmap"].to(device)
                 target_xy = batch["target_xy"].to(device)
 
                 optimizer.zero_grad(set_to_none=True)
 
                 with torch.autocast(device_type=device_type, enabled=use_amp):
-                    log_pred = model(image, prefix, prefix_len)
+                    log_pred = model(image, prefix, prefix_len, args.ignore_prefix)
 
+
+                log_pred = log_pred.float()
+                heatmap = heatmap.float()
+                
                 loss_kl = kl_loss(log_pred, heatmap)
-                loss_nll = nll_loss(log_pred, target_xy)
-                loss = loss_kl #optimizing KL for now, nll just being logged
+                loss_ll = ll_score(log_pred, target_xy)
+                loss = loss_kl #optimizing KL for now, ll just being logged
                 
                 if not torch.isfinite(loss):
                     raise RuntimeError(f"non-finite loss at step {step}: {loss.item()}")
@@ -560,6 +567,23 @@ def main() -> None:
                     max_norm=args.grad_clip,
                     error_if_nonfinite=True,
                 )
+                
+                if step % args.log_every == 0 and wandb_run is not None:
+                    module_grad_norms = {}
+                    for name, module in [
+                        ("scanpath_encoder", model.scanpath_encoder),
+                        ("fusion", model.fusion),
+                        ("decoder", model.decoder),
+                        ("image_adapter", model.image_adapter),
+                    ]:
+                        total_norm = 0.0
+                        for p in module.parameters():
+                            if p.grad is not None:
+                                total_norm += p.grad.detach().norm().item() ** 2
+                        module_grad_norms[f"grad_norm/{name}"] = total_norm ** 0.5
+
+                    wandb_run.log(module_grad_norms, step=step)
+
                 scaler.step(optimizer)
                 scaler.update()
                 scheduler.step()
@@ -570,17 +594,19 @@ def main() -> None:
                 epoch_float = epoch + batch_idx / max(steps_per_epoch, 1)
 
                 epoch_loss_kl += loss_kl.detach().item() * batch_size
-                epoch_loss_nll += loss_nll.detach().item() * batch_size
+                epoch_loss_ll += loss_ll.detach().item() * batch_size
                 epoch_samples += batch_size
-
+                
+                #wandb logging
                 if step % args.log_every == 0:
                     train_row = {
                         "step": step,
                         "epoch": epoch_float,
                         "split": "train",
                         "kl": loss_kl.detach().item(),
-                        "nll": loss_nll.detach().item(),
+                        "ll": loss_ll.detach().item(),
                         "nss": "",
+                        "auc": "",
                         "samples": batch_size,
                     }
 
@@ -590,11 +616,24 @@ def main() -> None:
                     lr = scheduler.get_last_lr()[1]
                     encoder_lr = scheduler.get_last_lr()[0]
 
+                    module_grad_norms = {}
+                    for name, module in [
+                        ("scanpath_encoder", model.scanpath_encoder),
+                        ("fusion", model.fusion),
+                        ("decoder", model.decoder),
+                        ("image_adapter", model.image_adapter),
+                    ]:
+                        total_norm = 0.0
+                        for p in module.parameters():
+                            if p.grad is not None:
+                                total_norm += p.grad.detach().norm().item() ** 2
+                        module_grad_norms[f"grad_norm/{name}"] = total_norm ** 0.5
+
                     print(
                         f"epoch {epoch + 1:03d}/{args.num_epochs:03d} | "
                         f"step {step:06d} | "
                         f"train kl={train_row['kl']:.4f} | "
-                        f"train nll={train_row['nll']:.4f} | "
+                        f"train ll={train_row['ll']:.4f} | "
                         f"lr={lr:.2e} | encoder_lr={encoder_lr:.2e}",
                         flush=True,
                     )
@@ -603,15 +642,15 @@ def main() -> None:
                         wandb_run.log(
                             {
                                 "train/kl": train_row["kl"],
-                                "train/nll": train_row["nll"],
+                                "train/ll": train_row["ll"],
                                 "train/lr": lr,
-                                "train/encoder_lr": encoder_lr,
                                 "train/grad_norm": float(grad_norm),
-                                "train/epoch": epoch_float,
+                                **module_grad_norms,
                             },
                             step=step,
                         )
-
+                        
+                #wandb heatmap logging
                 if wandb_run is not None and step % args.image_log_every == 0:
                     log_wandb_heatmaps(
                         run=wandb_run,
@@ -620,22 +659,22 @@ def main() -> None:
                         step=step,
                     )
 
+            #epoch end 
             mean_epoch_kl = epoch_loss_kl / max(epoch_samples, 1)
-            mean_epoch_nll = epoch_loss_nll / max(epoch_samples, 1)
+            mean_epoch_ll = epoch_loss_ll / max(epoch_samples, 1)
 
             print(
                 f"finished epoch {epoch + 1}/{args.num_epochs} | "
                 f"mean train kl={mean_epoch_kl:.4f} | "
-                f"mean train nll={mean_epoch_nll:.4f}",
+                f"mean train ll={mean_epoch_ll:.4f}",
                 flush=True,
             )
 
             if wandb_run is not None:
                 wandb_run.log(
                     {
-                        "epoch/train_kl": mean_epoch_kl,
-                        "epoch/train_nll": mean_epoch_nll,
-                        "epoch": epoch + 1,
+                        "train/epoch_kl": mean_epoch_kl,
+                        "train/epoch_ll": mean_epoch_ll,
                     },
                     step=step,
                 )
@@ -696,16 +735,6 @@ def main() -> None:
         print(f"best val kl: {best_val_kl:.4f}", flush=True)
         print(f"best val nss: {best_val_nss:.4f}", flush=True)
         print("training finished", flush=True)
-
-        if wandb_run is not None:
-            wandb_run.log(
-                {
-                    "final/step": step,
-                    "final/best_val_kl": best_val_kl,
-                    "final/best_val_nss": best_val_nss,
-                },
-                step=step,
-            )
 
     finally:
         if wandb_run is not None:

@@ -140,3 +140,8 @@ class ScanpathDataset(Dataset):
             "heatmap": heatmap,            # (64, 64)
             "target_xy": torch.tensor(target_xy, dtype=torch.float32),  # (2,) in [-1,1]
         }
+
+    def reseed_rng(self, worker_id: int) -> None:   #to be called from DataLoader worker_init_fn to ensure different random steps across workers while maintaining reproducibility
+        self._rng = np.random.default_rng(
+            [torch.initial_seed() % (2 ** 32), worker_id]
+        )

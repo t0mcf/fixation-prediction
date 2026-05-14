@@ -89,7 +89,7 @@ def parse_args() -> argparse.Namespace:
     # logging / validation / checkpointing
     parser.add_argument("--output-dir", default="runs/train")
     parser.add_argument("--log-every", type=int, default=20)
-    parser.add_argument("--val-batches", type=int, default=50)
+    parser.add_argument("--val-batches", type=int, default=-1, help="number of batches to use for validation; set to -1 to use the entire val set")
     parser.add_argument("--resume", default=None, help="path to an epoch checkpoint to resume from")
 
     # wandb
@@ -232,7 +232,7 @@ def evaluate(
     total_samples = 0
 
     for batch_idx, batch in enumerate(loader):
-        if batch_idx >= max_batches:
+        if max_batches is not None and max_batches > 0 and batch_idx >= max_batches:
             break
 
         image = batch["image"].to(device)

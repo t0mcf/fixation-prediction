@@ -10,6 +10,7 @@ def _worker_init_fn(worker_id: int):
     """Seed each worker independently for reproducibility."""
     worker_seed = torch.initial_seed() % (2 ** 32)
     np.random.seed(worker_seed)
+    torch.utils.data.get_worker_info().dataset.reseed_rng(worker_id) # reseed internal RNG for random step selection, ensuring different random steps across workers 
 
 
 class ImageGroupedSampler(Sampler):

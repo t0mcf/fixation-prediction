@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH --job-name=5k_e10_f2
+#SBATCH --job-name=20k_e40_bs128
 #SBATCH --output=logs/%x_%j.out
 #SBATCH --error=logs/%x_%j.err
 #SBATCH --partition=grete:shared
 #SBATCH --gres=gpu:A100:1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
-#SBATCH --time=03:00:00
+#SBATCH --time=08:00:00
 #SBATCH --constraint=inet
 
 set -eo pipefail
@@ -43,10 +43,10 @@ PY
 python -m src.training.train \
   --parquet-path /mnt/vast-nhr/projects/nim00018/datasets/scanpath_parquet/2026_03_03_20_41_11_268d00ae/scanpaths/merged.parquet \
   --imagenet-root /mnt/vast-nhr/projects/nim00018/datasets/ImageNet \
-  --output-dir runs/actinf_5k_e10_fusion2_sigma2_noamp \
-  --max-images 5000 \
-  --batch-size 16 \
-  --num-epochs 10 \
+  --output-dir runs/actinf_20k_e40_bs128_sigma2 \
+  --max-images 20000 \
+  --batch-size 128 \
+  --num-epochs 40 \
   --num-workers 4 \
   --seed 42 \
   --paths-per-image 16 \
@@ -56,7 +56,7 @@ python -m src.training.train \
   --d-model 256 \
   --n-heads 8 \
   --scanpath-layers 2 \
-  --fusion-layers 2 \
+  --fusion-layers 4 \
   --dropout 0.1 \
   --decoder-hidden-channels 256 \
   --max-prefix-len 15 \
@@ -66,11 +66,11 @@ python -m src.training.train \
   --grad-clip 1.0 \
   --warmup-fraction 0.05 \
   --log-every 50 \
-  --val-batches 50 \
+  --val-batches 50\
   --use-wandb \
   --wandb-project fixation-prediction \
   --wandb-entity fischer-tom-university-of-goettingen \
-  --wandb-name actinf_5k_e10_fusion2_sigma2_noamp
+  --wandb-name actinf_20k_e40_bs128_sigma2
 
 echo "end: $(date)"
 echo "================================================================================"

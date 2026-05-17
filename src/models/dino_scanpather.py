@@ -24,7 +24,7 @@ class FrozenVisualPatchEncoder(nn.Module):
     architecture:
         image -> timm vision transformer -> discard cls/register tokens
         -> keep spatial patch tokens only
-        
+
     input:
         image: (B, 3, H, W)
 
@@ -77,20 +77,24 @@ class FrozenVisualPatchEncoder(nn.Module):
 
         features = self.vit.forward_features(image)
 
-        # timm ViTs may return cls/register tokens before the spatial patch tokens.
-        # the last N tokens are the spatial patch tokens.
-        patch_tokens = features[:, -self.num_patches :, :]
+        # timm ViTs return cls/register tokens before spatial patch tokens.
+        # the last N tokens are always the spatial patch tokens.
+        patch_tokens = features[:, -self.num_patches:, :]
 
         return patch_tokens
-    
-    
+
+
 class ScanpathEncoder(nn.Module):
     """
     encodes previous fixations into scanpath tokens.
-    
+
     architecture:
         raw (x, y) coordinates -> linear projection + learned positional embeddings
         -> causal transformer encoder -> scanpath tokens
+
+    the causal mask is necessary for correctness in predict-all training:
+        token[t] may only attend to fixations 0..t, so that the prediction
+        at step t is not contaminated by future fixations.
 
     input:
         prefix: (B, T, 2)
@@ -143,31 +147,23 @@ class ScanpathEncoder(nn.Module):
         device = prefix.device
 
         positions = torch.arange(T, device=device).unsqueeze(0)
-
-        # x: (B, T, d_model)
         x = self.coord_proj(prefix) + self.pos_embed(positions)
 
-        # causal_mask[i, j] = true means token i cannot attend to token j.
         causal_mask = torch.triu(
             torch.ones(T, T, dtype=torch.bool, device=device),
             diagonal=1,
         )
 
-        # padding_mask[b, j] = true means token j is padding for sample b.
         padding_mask = (
             torch.arange(T, device=device).unsqueeze(0)
             >= prefix_len.unsqueeze(1)
         )
 
-        x = self.encoder(
-            x,
-            mask=causal_mask,
-            src_key_padding_mask=padding_mask,
-        )
+        x = self.encoder(x, mask=causal_mask, src_key_padding_mask=padding_mask)
 
         return self.norm(x)
-    
-    
+
+
 class CrossAttentionFusion(nn.Module):
     """
     fuses image patch tokens with scanpath history tokens.
@@ -228,15 +224,13 @@ class CrossAttentionFusion(nn.Module):
         _, T, _ = scanpath_tokens.shape
         device = scanpath_tokens.device
 
-        # padding_mask[b, j] = true means scanpath token j is padding for sample b.
         padding_mask = (
             torch.arange(T, device=device).unsqueeze(0)
             >= prefix_len.unsqueeze(1)
         )
-        
+
         all_padding = padding_mask.all(dim=1)
 
-        # attn_out: (B, N, d_model)
         attn_out, _ = self.cross_attn(
             query=image_tokens,
             key=scanpath_tokens,
@@ -244,22 +238,19 @@ class CrossAttentionFusion(nn.Module):
             key_padding_mask=padding_mask,
             need_weights=False,
         )
-        
+
         attn_out = torch.where(
-                all_padding[:, None, None], 
-                torch.zeros_like(attn_out), 
-                attn_out
-            )
+            all_padding[:, None, None],
+            torch.zeros_like(attn_out),
+            attn_out,
+        )
 
-        # residual connection keeps the original visual patch information.
         x = self.norm1(image_tokens + attn_out)
-
-        # feed-forward block updates each patch token independently.
         x = self.norm2(x + self.ffn(x))
 
         return x
-    
-    
+
+
 class SpatialHeatmapDecoder(nn.Module):
     """
     decodes history-conditioned patch tokens into spatial heatmap logits.
@@ -274,9 +265,6 @@ class SpatialHeatmapDecoder(nn.Module):
 
     output:
         logits: (B, heatmap_size, heatmap_size)
-
-    for dinov2 vit-b/14 with 224x224 input:
-        N = 16 * 16 = 256 patches
     """
 
     def __init__(
@@ -298,20 +286,17 @@ class SpatialHeatmapDecoder(nn.Module):
             nn.GELU(),
             nn.Dropout2d(dropout),
 
-            # (B, hidden_channels, 16, 16) -> (B, hidden_channels // 2, 32, 32)
             nn.Upsample(scale_factor=2, mode="bilinear", align_corners=False),
             nn.Conv2d(hidden_channels, hidden_channels // 2, kernel_size=3, padding=1),
             nn.GroupNorm(num_groups=8, num_channels=hidden_channels // 2),
             nn.GELU(),
             nn.Dropout2d(dropout),
 
-            # (B, hidden_channels // 2, 32, 32) -> (B, hidden_channels // 4, 64, 64)
             nn.Upsample(scale_factor=2, mode="bilinear", align_corners=False),
             nn.Conv2d(hidden_channels // 2, hidden_channels // 4, kernel_size=3, padding=1),
             nn.GroupNorm(num_groups=8, num_channels=hidden_channels // 4),
             nn.GELU(),
 
-            # (B, hidden_channels // 4, 64, 64) -> (B, 1, 64, 64)
             nn.Conv2d(hidden_channels // 4, 1, kernel_size=1),
         )
 
@@ -324,43 +309,34 @@ class SpatialHeatmapDecoder(nn.Module):
         expected_n = self.patch_grid_size * self.patch_grid_size
 
         if N != expected_n:
-            raise ValueError(
-                f"expected {expected_n} patch tokens, got {N}"
-            )
+            raise ValueError(f"expected {expected_n} patch tokens, got {N}")
 
-        # (B, N, d_model) -> (B, d_model, 16, 16)
         x = patch_tokens.transpose(1, 2).reshape(
-            B,
-            d_model,
-            self.patch_grid_size,
-            self.patch_grid_size,
+            B, d_model, self.patch_grid_size, self.patch_grid_size,
         )
 
-        # (B, 1, heatmap_size, heatmap_size)
-        logits = self.net(x)
+        return self.net(x).squeeze(1)
 
-        return logits.squeeze(1)
-    
-    
+
 class ScanpathModel(nn.Module):
     """
-    dino-based model for scanpath-conditioned next-fixation prediction.
+    dino-based model for predict-all next-fixation prediction.
 
-    architecture:
-        image -> frozen visual patch encoder -> image adapter
-        prefix -> scanpath encoder
-        image tokens query scanpath tokens through cross-attention
-        fused patch tokens -> spatial heatmap decoder -> log-probability heatmap
+    for each fixation step t in [0, N-2], predicts the heatmap for fixation t+1
+    given image and fixations[0..t] as context. all predictions are produced in
+    a single forward pass via a loop over t with per-step cross-attention masking.
 
     input:
         image: (B, 3, 224, 224)
-        prefix: (B, T, 2)
-        prefix_len: (B,)
+        fixations: (B, max_seq_len, 2)   full padded fixation sequence
+        fixations_len: (B,)              actual sequence length per sample
 
     output:
-        log_heatmap: (B, heatmap_size, heatmap_size)
+        log_heatmaps: (B, max_seq_len - 1, heatmap_size, heatmap_size)
+                      log-probability heatmap for each prediction step.
+                      step t is valid for sample b when t < fixations_len[b] - 1.
     """
-    
+
     def __init__(
         self,
         visual_encoder: str = "dinov2_base",
@@ -370,12 +346,14 @@ class ScanpathModel(nn.Module):
         n_heads: int = 8,
         scanpath_layers: int = 2,
         fusion_layers: int = 1,
-        max_prefix_len: int = 15,
+        max_seq_len: int = 16,
         heatmap_size: int = 64,
         dropout: float = 0.1,
         decoder_hidden_channels: int = 256,
     ) -> None:
         super().__init__()
+
+        self.max_seq_len = max_seq_len
 
         self.image_encoder = FrozenVisualPatchEncoder(
             model_name=visual_encoder,
@@ -392,22 +370,14 @@ class ScanpathModel(nn.Module):
             d_model=d_model,
             n_heads=n_heads,
             n_layers=scanpath_layers,
-            max_prefix_len=max_prefix_len,
+            max_prefix_len=max_seq_len - 1,
             dropout=dropout,
         )
 
-        self.fusion_layers = fusion_layers
-
-        self.fusion = nn.ModuleList(
-            [
-                CrossAttentionFusion(
-                    d_model=d_model,
-                    n_heads=n_heads,
-                    dropout=dropout,
-                )
-                for _ in range(fusion_layers)
-            ]
-        )
+        self.fusion = nn.ModuleList([
+            CrossAttentionFusion(d_model=d_model, n_heads=n_heads, dropout=dropout)
+            for _ in range(fusion_layers)
+        ])
 
         self.decoder = SpatialHeatmapDecoder(
             d_model=d_model,
@@ -420,48 +390,52 @@ class ScanpathModel(nn.Module):
         self.heatmap_size = heatmap_size
 
     def encode_image(self, image: torch.Tensor) -> torch.Tensor:
-        """
-        image: (B, 3, 224, 224)
-        returns: (B, N, d_model)
-        """
         patch_tokens = self.image_encoder(image)
-
-        # patch_tokens: (B, N, D) -> image_tokens: (B, N, d_model)
-        image_tokens = self.image_adapter(patch_tokens)
-
-        return image_tokens
+        return self.image_adapter(patch_tokens)
 
     def forward(
         self,
         image: torch.Tensor,
-        prefix: torch.Tensor,
-        prefix_len: torch.Tensor,
+        fixations: torch.Tensor,
+        fixations_len: torch.Tensor,
         ignore_prefix: bool = False,
     ) -> torch.Tensor:
         """
         image: (B, 3, 224, 224)
-        prefix: (B, T, 2)
-        prefix_len: (B,)
-        returns: (B, heatmap_size, heatmap_size)
+        fixations: (B, max_seq_len, 2)
+        fixations_len: (B,)
+        returns: (B, max_seq_len - 1, heatmap_size, heatmap_size)
         """
-        image_tokens = self.encode_image(image)
+        B = image.shape[0]
+        T = fixations.shape[1] - 1  # number of prediction steps
+
+        image_tokens = self.encode_image(image)  # (B, N, d_model)
+
         if ignore_prefix:
-            fused_tokens = image_tokens
-        else:
-            scanpath_tokens = self.scanpath_encoder(prefix, prefix_len)
+            logit = self.decoder(image_tokens)  # (B, H, W)
+            log_h = F.log_softmax(logit.view(B, -1), dim=-1).view_as(logit)
+            return log_h.unsqueeze(1).expand(-1, T, -1, -1)
 
-            fused_tokens = image_tokens
-            for fusion_layer in self.fusion:
-                fused_tokens = fusion_layer(
-                    image_tokens=fused_tokens,
-                    scanpath_tokens=scanpath_tokens,
-                    prefix_len=prefix_len,
-                )
+        # prefix: all fixations except the last  (B, T, 2)
+        prefix = fixations[:, :-1, :]
+        prefix_len = (fixations_len - 1).clamp(min=0)  # (B,)
 
-        logits = self.decoder(fused_tokens)
+        # encode full prefix once with causal mask;
+        # token[t] encodes "given fixations 0..t" and is used to predict fixation t+1
+        scanpath_tokens = self.scanpath_encoder(prefix, prefix_len)  # (B, T, d_model)
 
-        # logits: (B, H, W) -> log_heatmap: (B, H, W)
-        B = logits.shape[0]
-        log_heatmap = F.log_softmax(logits.view(B, -1), dim=-1).view_as(logits)
+        heatmaps = []
+        for t in range(T):
+            # for step t, each sample may use at most t+1 scanpath tokens,
+            # and also no more than its actual valid prefix length
+            eff_len = torch.clamp(prefix_len, max=t + 1)  # (B,)
 
-        return log_heatmap
+            fused = image_tokens
+            for layer in self.fusion:
+                fused = layer(fused, scanpath_tokens, eff_len)
+
+            logit = self.decoder(fused)  # (B, H, W)
+            log_h = F.log_softmax(logit.view(B, -1), dim=-1).view_as(logit)
+            heatmaps.append(log_h)
+
+        return torch.stack(heatmaps, dim=1)  # (B, T, H, W)

@@ -10,7 +10,6 @@ def _worker_init_fn(worker_id: int):
     """Seed each worker independently for reproducibility."""
     worker_seed = torch.initial_seed() % (2 ** 32)
     np.random.seed(worker_seed)
-    torch.utils.data.get_worker_info().dataset.reseed_rng(worker_id) # reseed internal RNG for random step selection, ensuring different random steps across workers 
 
 
 class ImageGroupedSampler(Sampler):
@@ -23,17 +22,15 @@ class ImageGroupedSampler(Sampler):
     def __init__(self, dataset: ScanpathDataset, paths_per_image: int = 16, seed: int = 42):
         self.paths_per_image = paths_per_image
         self.seed = seed
-        self.epoch = 0 # track epoch for deterministic shuffling across epochs
+        self.epoch = 0
 
-        # build image → [indices] map using pandas groupby (vectorised, not a Python loop)
         grouped = dataset.df.groupby("image_path", sort=False).indices
         self.groups = [
             idxs.tolist() for idxs in grouped.values()
             if len(idxs) >= paths_per_image
         ]
-        
+
     def set_epoch(self, epoch: int):
-        # call at start of each epoch to shuffle differently across epochs while maintaining reproducibility
         self.epoch = epoch
 
     def __iter__(self):
@@ -57,14 +54,18 @@ def make_dataloader(
     use_grouped_sampler: bool = True,
     max_samples: int = None,
     max_images: int = None,
+    max_seq_len: int = 16,
     prefetch_factor: int = 4,
     **dataset_kwargs,
 ) -> DataLoader:
-    dataset = ScanpathDataset(split=split, seed=seed, max_samples=max_samples,
-                              max_images=max_images,
-                              heatmap_sigma=dataset_kwargs.pop("heatmap_sigma", 8.0),
-                              heatmap_size=dataset_kwargs.pop("heatmap_size", 64),
-                              **dataset_kwargs)
+    dataset = ScanpathDataset(
+        split=split,
+        seed=seed,
+        max_seq_len=max_seq_len,
+        max_samples=max_samples,
+        max_images=max_images,
+        **dataset_kwargs,
+    )
 
     loader_kwargs = dict(
         num_workers=num_workers,

@@ -75,7 +75,7 @@ def parse_args() -> argparse.Namespace:
         "--encoder-lr-scale",
         type=float,
         default=0.1,
-        help="lr multiplier for the pretrained encoder relative to --lr",
+        help="lr multiplier for the pretrained encoder relative to --lr (only active if encoder is unfrozen)",
     )
     parser.add_argument(
         "--lr-schedule",
@@ -101,7 +101,7 @@ def parse_args() -> argparse.Namespace:
     # logging / validation / checkpointing
     parser.add_argument("--output-dir", default="runs/train")
     parser.add_argument("--log-every", type=int, default=20)
-    parser.add_argument("--val-batches", type=int, default=-1,
+    parser.add_argument("--val-batches", type=int, default=100,
                         help="validation batches per epoch; -1 = full val set")
     parser.add_argument("--resume", default=None, help="path to a checkpoint to resume from")
 
@@ -416,21 +416,11 @@ def main() -> None:
         decoder_hidden_channels=args.decoder_hidden_channels,
     ).to(device)
 
-    encoder_params = list(model.image_encoder.parameters())
-    encoder_param_ids = {id(p) for p in encoder_params}
-    other_params = [p for p in model.parameters() if id(p) not in encoder_param_ids]
+    # the visual encoder is frozen, so only non-encoder params are trainable.
+    # encoder_lr_scale is reserved for future fine-tuning experiments.
+    trainable_params = [p for p in model.parameters() if p.requires_grad]
 
-    trainable_encoder = [p for p in encoder_params if p.requires_grad]
-    trainable_other = [p for p in other_params if p.requires_grad]
-    trainable_params = trainable_encoder + trainable_other
-
-    optimizer = AdamW(
-        [
-            {"params": trainable_encoder, "lr": args.lr * args.encoder_lr_scale},
-            {"params": trainable_other, "lr": args.lr},
-        ],
-        weight_decay=args.weight_decay,
-    )
+    optimizer = AdamW(trainable_params, lr=args.lr, weight_decay=args.weight_decay)
 
     warmup_steps = (
         args.warmup_steps if args.warmup_steps > 0
@@ -532,15 +522,14 @@ def main() -> None:
                     }
                     append_csv(log_path, train_row)
 
-                    lr = scheduler.get_last_lr()[1]
-                    encoder_lr = scheduler.get_last_lr()[0]
+                    lr = scheduler.get_last_lr()[0]
 
                     print(
                         f"epoch {epoch + 1:03d}/{args.num_epochs:03d} | "
                         f"step {step:06d} | "
                         f"train kl={train_row['kl']:.4f} | "
                         f"train ll={train_row['ll']:.4f} | "
-                        f"lr={lr:.2e} | encoder_lr={encoder_lr:.2e}",
+                        f"lr={lr:.2e}",
                         flush=True,
                     )
 
@@ -569,6 +558,7 @@ def main() -> None:
                             step=step,
                         )
 
+
                 if wandb_run is not None and step % args.image_log_every == 0:
                     log_wandb_heatmaps(wandb_run, log_preds, target_heatmaps, step)
 
@@ -596,10 +586,10 @@ def main() -> None:
                 best_val_kl=best_val_kl, best_val_nss=best_val_nss,
             )
 
-            epoch_ckpt_path = checkpoint_dir / f"epoch_{epoch:03d}.pt"
-            save_checkpoint(epoch_ckpt_path, model, optimizer, scheduler,
+            latest_path = checkpoint_dir / "latest.pt"
+            save_checkpoint(latest_path, model, optimizer, scheduler,
                             step, epoch, args, scaler, best_val_kl, best_val_nss)
-            print(f"saved epoch checkpoint: {epoch_ckpt_path}", flush=True)
+            print(f"saved latest checkpoint: {latest_path}", flush=True)
 
         final_path = checkpoint_dir / "final.pt"
         final_epoch = epoch if "epoch" in locals() else start_epoch - 1

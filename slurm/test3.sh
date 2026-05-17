@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=test
+#SBATCH --job-name=test3
 #SBATCH --output=logs/%x_%j.out
 #SBATCH --error=logs/%x_%j.err
 #SBATCH --partition=grete:shared
@@ -43,10 +43,10 @@ PY
 python -m src.training.train \
   --parquet-path /mnt/vast-nhr/projects/nim00018/datasets/scanpath_parquet/2026_03_03_20_41_11_268d00ae/scanpaths/merged.parquet \
   --imagenet-root /mnt/vast-nhr/projects/nim00018/datasets/ImageNet \
-  --output-dir runs/actinf_test \
-  --max-images 128 \
+  --output-dir runs/actinf_test3 \
+  --max-images 8 \
   --batch-size 128 \
-  --num-epochs 200 \
+  --num-epochs 500 \
   --num-workers 4 \
   --seed 42 \
   --paths-per-image 16 \
@@ -57,12 +57,13 @@ python -m src.training.train \
   --n-heads 8 \
   --scanpath-layers 2 \
   --fusion-layers 4 \
-  --dropout 0.1 \
+  --dropout 0.0 \
   --decoder-hidden-channels 256 \
   --max-prefix-len 15 \
   --lr 1e-4 \
+  --lr-schedule constant \
   --encoder-lr-scale 0.1 \
-  --weight-decay 0.05 \
+  --weight-decay 0.00 \
   --grad-clip 1.0 \
   --warmup-fraction 0.05 \
   --log-every 50 \
@@ -70,7 +71,7 @@ python -m src.training.train \
   --use-wandb \
   --wandb-project fixation-prediction \
   --wandb-entity fischer-tom-university-of-goettingen \
-  --wandb-name actinf_test
+  --wandb-name actinf_test3
 
 echo "end: $(date)"
 echo "================================================================================"

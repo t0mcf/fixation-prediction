@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH --job-name=test
+#SBATCH --job-name=test4
 #SBATCH --output=logs/%x_%j.out
 #SBATCH --error=logs/%x_%j.err
 #SBATCH --partition=grete:shared
 #SBATCH --gres=gpu:A100:1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
-#SBATCH --time=03:00:00
+#SBATCH --time=00:30:00
 #SBATCH --constraint=inet
 
 set -eo pipefail
@@ -43,13 +43,13 @@ PY
 python -m src.training.train \
   --parquet-path /mnt/vast-nhr/projects/nim00018/datasets/scanpath_parquet/2026_03_03_20_41_11_268d00ae/scanpaths/merged.parquet \
   --imagenet-root /mnt/vast-nhr/projects/nim00018/datasets/ImageNet \
-  --output-dir runs/actinf_test \
-  --max-images 128 \
-  --batch-size 128 \
-  --num-epochs 200 \
+  --output-dir runs/actinf_test4 \
+  --max-images 1 \
+  --batch-size 1 \
+  --num-epochs 500 \
   --num-workers 4 \
   --seed 42 \
-  --paths-per-image 16 \
+  --paths-per-image 1 \
   --heatmap-size 64 \
   --heatmap-sigma 2.0 \
   --visual-encoder dinov2_base \
@@ -57,20 +57,21 @@ python -m src.training.train \
   --n-heads 8 \
   --scanpath-layers 2 \
   --fusion-layers 4 \
-  --dropout 0.1 \
+  --dropout 0.0 \
   --decoder-hidden-channels 256 \
   --max-prefix-len 15 \
-  --lr 1e-4 \
+  --lr 1e-5 \
+  --lr-schedule constant \
   --encoder-lr-scale 0.1 \
-  --weight-decay 0.05 \
+  --weight-decay 0.00 \
   --grad-clip 1.0 \
   --warmup-fraction 0.05 \
-  --log-every 50 \
-  --val-batches 100\
+  --log-every 10 \
+  --val-batches 1\
   --use-wandb \
   --wandb-project fixation-prediction \
   --wandb-entity fischer-tom-university-of-goettingen \
-  --wandb-name actinf_test
+  --wandb-name actinf_test4
 
 echo "end: $(date)"
 echo "================================================================================"

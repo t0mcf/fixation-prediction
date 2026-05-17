@@ -70,6 +70,11 @@ def parse_args() -> argparse.Namespace:
         default=0.1,
         help="lr multiplier for the pretrained encoder relative to --lr",
     )
+    parser.add_argument(
+        "--lr-schedule",
+        choices=["cosine", "constant"],
+        default="cosine",
+    )
     parser.add_argument("--weight-decay", type=float, default=0.05)
     parser.add_argument("--grad-clip", type=float, default=1.0)
     parser.add_argument(
@@ -203,11 +208,16 @@ def make_scheduler(
     optimizer: torch.optim.Optimizer,
     warmup_steps: int,
     total_steps: int,
+    schedule: str = "cosine",
 ) -> torch.optim.lr_scheduler.LambdaLR:
     def lr_lambda(step: int) -> float:
         if warmup_steps > 0 and step < warmup_steps:
             # +1 so the very first step gets lr/warmup_steps instead of 0
             return (step + 1) / warmup_steps
+        
+        if schedule == "constant":
+            return 1.0
+        
         progress = (step - warmup_steps) / max(total_steps - warmup_steps, 1)
         return 0.5 * (1.0 + math.cos(math.pi * progress))
 
@@ -491,7 +501,7 @@ def main() -> None:
         else int(total_steps * args.warmup_fraction)
     )
 
-    scheduler = make_scheduler(optimizer, warmup_steps, total_steps)
+    scheduler = make_scheduler(optimizer, warmup_steps, total_steps, args.lr_schedule)
 
     scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
 
@@ -699,22 +709,6 @@ def main() -> None:
                 best_val_kl=best_val_kl,
                 best_val_nss=best_val_nss,
             )
-
-            # epoch checkpoint used as resume boundary
-            epoch_ckpt_path = checkpoint_dir / f"epoch_{epoch:03d}.pt"
-            save_checkpoint(
-                path=epoch_ckpt_path,
-                model=model,
-                optimizer=optimizer,
-                scheduler=scheduler,
-                step=step,
-                epoch=epoch,
-                args=args,
-                scaler=scaler,
-                best_val_kl=best_val_kl,
-                best_val_nss=best_val_nss,
-            )
-            print(f"saved epoch checkpoint: {epoch_ckpt_path}", flush=True)
 
         final_path = checkpoint_dir / "final.pt"
         final_epoch = epoch if "epoch" in locals() else start_epoch - 1

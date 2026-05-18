@@ -54,7 +54,7 @@ def parse_args() -> argparse.Namespace:
 
     # target heatmaps
     parser.add_argument("--heatmap-size", type=int, default=64)
-    parser.add_argument("--heatmap-sigma", type=float, default=8.0)
+    parser.add_argument("--heatmap-sigma", type=float, default=2.0)
 
     # model
     parser.add_argument("--visual-encoder", default="dinov2_base")

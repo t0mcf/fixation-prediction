@@ -16,7 +16,6 @@ PARQUET_PATH = (
 )
 
 HEATMAP_SIZE = 64
-GAUSSIAN_SIGMA = 8.0
 
 
 @functools.lru_cache(maxsize=32)
@@ -49,6 +48,8 @@ class ScanpathDataset(Dataset):
         parquet_path: override for parquet path
         max_samples: limit total number of rows
         max_images: limit by unique image count
+        max_paths_per_image: cap scanpaths per image (deterministic: keeps first N rows
+                             per image after sorting by image_path)
     """
 
     def __init__(
@@ -60,6 +61,7 @@ class ScanpathDataset(Dataset):
         parquet_path: str = PARQUET_PATH,
         max_samples: int = None,
         max_images: int = None,
+        max_paths_per_image: int = None,
     ):
         assert split in ("train", "val")
         self.split = split
@@ -85,6 +87,13 @@ class ScanpathDataset(Dataset):
             self.df = self.df[self.df["image_path"].isin(kept)].reset_index(drop=True)
         elif max_samples and len(self.df) > max_samples:
             self.df = self.df.iloc[:max_samples].reset_index(drop=True)
+
+        if max_paths_per_image:
+            self.df = (
+                self.df.groupby("image_path", sort=False)
+                .head(max_paths_per_image)
+                .reset_index(drop=True)
+            )
 
     def __len__(self) -> int:
         return len(self.df)

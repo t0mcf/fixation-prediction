@@ -56,6 +56,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--heatmap-size", type=int, default=64)
     parser.add_argument("--heatmap-sigma", type=float, default=2.0)
 
+    # training loss
+    parser.add_argument(
+        "--loss", choices=["kl", "ll"], default="kl",
+        help="training objective: 'kl' = KL divergence against Gaussian heatmap "
+             "(requires --heatmap-sigma); 'll' = NLL at the true fixation location "
+             "(no sigma needed, sharper signal)",
+    )
+
     # model
     parser.add_argument("--visual-encoder", default="dinov2_base")
     parser.add_argument("--no-pretrained-encoder", action="store_true")
@@ -64,9 +72,33 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--scanpath-layers", type=int, default=2)
     parser.add_argument("--fusion-layers", type=int, default=1)
     parser.add_argument("--dropout", type=float, default=0.1)
+    parser.add_argument(
+        "--decoder-dropout", type=float, default=None,
+        help="separate dropout rate for the decoder's Dropout2d layers. "
+             "if unset, inherits --dropout. set to 0.0 to disable decoder dropout "
+             "while keeping it elsewhere (recommended — Dropout2d zeroes entire "
+             "feature channels, which is disruptive for spatial heatmap structure).",
+    )
     parser.add_argument("--decoder-hidden-channels", type=int, default=256)
     parser.add_argument("--max-seq-len", type=int, default=16,
                         help="maximum total scanpath length (full sequence including first fixation)")
+    parser.add_argument(
+        "--visual-scanpath-features", action="store_true",
+        help="enrich each fixation token with the DINOv2 patch feature at that location, "
+             "so the scanpath encoder reasons over the visual sequence not just coordinates",
+    )
+    parser.add_argument(
+        "--patch-pos-embed", action="store_true",
+        help="add learned 2D patch position embeddings to image tokens after the adapter. "
+             "addresses coordinate-space mismatch between frozen DINOv2 PEs and the "
+             "scanpath encoder's coord_proj space; trained end-to-end with our objective.",
+    )
+    parser.add_argument(
+        "--bidirectional-fusion", action="store_true",
+        help="use parallel co-attention in fusion layers: image patches and scanpath tokens "
+             "mutually attend to each other (both directions computed in parallel using "
+             "pre-update representations as K, V). doubles fusion layer parameter count.",
+    )
 
     # optimization
     parser.add_argument("--num-epochs", type=int, default=10)
@@ -175,20 +207,112 @@ def init_wandb(args: argparse.Namespace):
     )
 
 
-def log_wandb_heatmaps(run, log_preds, target_heatmaps, step):
-    """Log the first sample's first prediction step for visual inspection."""
+_IMAGENET_MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32).reshape(1, 1, 3)
+_IMAGENET_STD = np.array([0.229, 0.224, 0.225], dtype=np.float32).reshape(1, 1, 3)
+
+
+def _denormalise_image(image_chw: torch.Tensor) -> np.ndarray:
+    """Convert a normalised (3, H, W) torch image to a [0, 1] HxWx3 numpy array."""
+    img = image_chw.detach().cpu().float().permute(1, 2, 0).numpy()
+    img = img * _IMAGENET_STD + _IMAGENET_MEAN
+    return np.clip(img, 0.0, 1.0)
+
+
+def log_wandb_samples(
+    run,
+    image: torch.Tensor,            # (B, 3, H_img, W_img)
+    fixations: torch.Tensor,        # (B, max_seq_len, 2) in [-1, 1]
+    fixations_len: torch.Tensor,    # (B,) int
+    log_preds: torch.Tensor,        # (B, T, H, W)
+    step: int,
+    n_samples: int = 4,
+    tag: str = "train",
+) -> None:
+    """
+    Rich per-sample visualisation: input image, past fixations as a connected
+    path, target fixation as a star, predicted heatmap overlaid. For each
+    sample we show three prediction steps (early/middle/late within the valid
+    prefix range) so you can see how the prediction evolves with history.
+
+    Logged as a single wandb.Image (matplotlib figure) at key f"{tag}/samples".
+    Wrapped in try/except so a viz failure can't kill training.
+    """
+    import matplotlib.pyplot as plt
+    import torch.nn.functional as F
     import wandb
-    pred = log_preds[0, 0].exp().detach().float().cpu().numpy()
-    target = target_heatmaps[0, 0].detach().float().cpu().numpy()
-    pred = (pred - pred.min()) / (pred.max() - pred.min() + 1e-8)
-    target = (target - target.min()) / (target.max() - target.min() + 1e-8)
-    import numpy as np
-    overlay = np.stack([pred, target, np.zeros_like(pred)], axis=-1)
-    run.log({
-        "sample/pred": wandb.Image(pred, caption="pred"),
-        "sample/target": wandb.Image(target, caption="target"),
-        "sample/overlay": wandb.Image(overlay, caption="red=pred, green=target"),
-    }, step=step)
+
+    try:
+        B, _, img_h, img_w = image.shape
+        T = log_preds.shape[1]
+        n_samples = min(n_samples, B)
+
+        # find samples with a long-enough prefix for a meaningful 3-step view.
+        # prefix_len_b = fixations_len_b - 1 is the number of valid prediction steps.
+        prefix_lens = (fixations_len - 1).clamp(min=0).cpu().numpy()
+        candidates = [b for b in range(B) if prefix_lens[b] >= 2][:n_samples]
+        if not candidates:
+            return
+
+        # upsample all log_preds for the chosen samples to image resolution once
+        # (much cheaper than per-step PIL ops).
+        chosen_logp = log_preds[candidates].detach().float()  # (k, T, H, W)
+        chosen_pred = chosen_logp.exp()
+        chosen_pred_up = F.interpolate(
+            chosen_pred,
+            size=(img_h, img_w),
+            mode="bilinear",
+            align_corners=False,
+        ).cpu().numpy()                              # (k, T, img_h, img_w)
+
+        n = len(candidates)
+        fig, axes = plt.subplots(n, 3, figsize=(11, 3.5 * n), squeeze=False)
+
+        for row, b in enumerate(candidates):
+            prefix_len = int(prefix_lens[b])
+            steps_to_show = sorted({
+                0,
+                max(1, prefix_len // 2),
+                prefix_len - 1,
+            })
+            # pad to exactly 3 columns by repeating the last step
+            while len(steps_to_show) < 3:
+                steps_to_show.append(steps_to_show[-1])
+
+            img_np = _denormalise_image(image[b])  # (H, W, 3) in [0, 1]
+            fix_np = fixations[b].detach().cpu().float().numpy()  # (max_seq_len, 2)
+            # convert normalised coords [-1, 1] to image pixels [0, img_w/h - 1]
+            fix_px_x = (fix_np[:, 0] + 1) / 2 * (img_w - 1)
+            fix_px_y = (fix_np[:, 1] + 1) / 2 * (img_h - 1)
+
+            for col, t in enumerate(steps_to_show):
+                ax = axes[row, col]
+                ax.imshow(img_np)
+                # overlay prediction heatmap (alpha so image still visible).
+                # vmax pinned per-step to avoid one peak dominating the colour map.
+                pred_up = chosen_pred_up[row, t]
+                ax.imshow(pred_up, cmap="hot", alpha=0.55,
+                          vmin=0.0, vmax=float(pred_up.max() + 1e-12))
+                # past fixations: connected blue path, growing with t.
+                past_x = fix_px_x[:t + 1]
+                past_y = fix_px_y[:t + 1]
+                ax.plot(past_x, past_y, "-o", color="dodgerblue",
+                        markersize=4, linewidth=1.2, alpha=0.9)
+                # most recent fixation = larger marker.
+                ax.plot(past_x[-1], past_y[-1], "o", color="dodgerblue",
+                        markersize=8, markeredgecolor="white", markeredgewidth=1.2)
+                # target fixation (what we're trying to predict): green star.
+                ax.plot(fix_px_x[t + 1], fix_px_y[t + 1], "*", color="lime",
+                        markersize=15, markeredgecolor="black", markeredgewidth=0.8)
+                ax.set_title(f"sample {b}  step t={t}  (prefix={t+1})", fontsize=9)
+                ax.set_xticks([])
+                ax.set_yticks([])
+
+        plt.tight_layout()
+        run.log({f"{tag}/samples": wandb.Image(fig)}, step=step)
+        plt.close(fig)
+    except Exception as e:
+        # never let visualisation kill training
+        print(f"warning: log_wandb_samples failed: {e}", flush=True)
 
 
 def make_scheduler(
@@ -217,7 +341,7 @@ def evaluate(
     ignore_prefix: bool,
     heatmap_size: int,
     heatmap_sigma: float,
-) -> dict[str, float]:
+) -> dict[str, Any]:
     model.eval()
     device_type = device.split(":")[0]
 
@@ -226,6 +350,9 @@ def evaluate(
     total_nss = 0.0
     total_auc = 0.0
     total_valid = 0
+
+    # stash the first batch's data + predictions so the caller can visualise it.
+    sample_batch: dict[str, torch.Tensor] | None = None
 
     for batch_idx, batch in enumerate(loader):
         if max_batches is not None and max_batches > 0 and batch_idx >= max_batches:
@@ -247,6 +374,15 @@ def evaluate(
             log_preds = model(image, fixations, fixations_len, ignore_prefix)
 
         log_preds = log_preds.float()
+
+        if sample_batch is None:
+            # detach + keep on GPU; log_wandb_samples handles transfer.
+            sample_batch = {
+                "image": image.detach(),
+                "fixations": fixations.detach(),
+                "fixations_len": fixations_len.detach(),
+                "log_preds": log_preds.detach(),
+            }
 
         # valid_mask[b, t] = True when step t has a real prediction target
         valid_mask = (
@@ -274,7 +410,8 @@ def evaluate(
 
     if total_valid == 0:
         return {"val_kl": float("nan"), "val_ll": float("nan"),
-                "val_nss": float("nan"), "val_auc": float("nan"), "val_steps": 0}
+                "val_nss": float("nan"), "val_auc": float("nan"),
+                "val_steps": 0, "sample_batch": None}
 
     return {
         "val_kl":   total_kl   / total_valid,
@@ -282,6 +419,7 @@ def evaluate(
         "val_nss":  total_nss  / total_valid,
         "val_auc":  total_auc  / total_valid,
         "val_steps": total_valid,
+        "sample_batch": sample_batch,
     }
 
 
@@ -322,6 +460,18 @@ def run_validation(
              "val/nss": val_row["nss"], "val/auc": val_row["auc"]},
             step=step,
         )
+        sample = metrics.get("sample_batch")
+        if sample is not None:
+            log_wandb_samples(
+                wandb_run,
+                image=sample["image"],
+                fixations=sample["fixations"],
+                fixations_len=sample["fixations_len"],
+                log_preds=sample["log_preds"],
+                step=step,
+                n_samples=4,
+                tag="val",
+            )
 
     if metrics["val_kl"] < best_val_kl:
         best_val_kl = metrics["val_kl"]
@@ -347,8 +497,11 @@ def main() -> None:
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
     torch.cuda.manual_seed_all(args.seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
+    # benchmark=True lets cuDNN pick the fastest conv algorithm per input shape.
+    # deterministic=False because AMP isn't bit-exact reproducible anyway, and
+    # the deterministic conv path is significantly slower on A100.
+    torch.backends.cudnn.deterministic = False
+    torch.backends.cudnn.benchmark = True
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     device_type = device.split(":")[0]
@@ -413,7 +566,11 @@ def main() -> None:
         max_seq_len=args.max_seq_len,
         heatmap_size=args.heatmap_size,
         dropout=args.dropout,
+        decoder_dropout=args.decoder_dropout,
         decoder_hidden_channels=args.decoder_hidden_channels,
+        use_visual_scanpath_features=args.visual_scanpath_features,
+        use_patch_pos_embed=args.patch_pos_embed,
+        use_bidirectional_fusion=args.bidirectional_fusion,
     ).to(device)
 
     # the visual encoder is frozen, so only non-encoder params are trainable.
@@ -478,20 +635,23 @@ def main() -> None:
                 optimizer.zero_grad(set_to_none=True)
 
                 with torch.autocast(device_type=device_type, enabled=use_amp):
-                    log_preds = model(image, fixations, fixations_len, args.ignore_prefix)
+                    log_preds = model(image, fixations, fixations_len, args.ignore_prefix,
+                                      paths_per_image=args.paths_per_image)
 
                 log_preds = log_preds.float()
 
                 loss_kl = multi_step_kl_loss(log_preds, target_heatmaps, fixations_len)
                 loss_ll = multi_step_ll_score(log_preds, target_fixations, fixations_len)
 
-                if not torch.isfinite(loss_kl):
-                    raise RuntimeError(f"non-finite loss at step {step}: {loss_kl.item()}")
+                training_loss = loss_kl if args.loss == "kl" else -loss_ll
 
-                scaler.scale(loss_kl).backward()
+                if not torch.isfinite(training_loss):
+                    raise RuntimeError(f"non-finite loss at step {step}: {training_loss.item()}")
+
+                scaler.scale(training_loss).backward()
                 scaler.unscale_(optimizer)
                 grad_norm = torch.nn.utils.clip_grad_norm_(
-                    trainable_params, max_norm=args.grad_clip, error_if_nonfinite=True,
+                    trainable_params, max_norm=args.grad_clip, error_if_nonfinite=False,
                 )
 
                 scaler.step(optimizer)
@@ -535,12 +695,15 @@ def main() -> None:
 
                     if wandb_run is not None:
                         module_grad_norms = {}
-                        for name, module in [
+                        modules_to_log = [
                             ("scanpath_encoder", model.scanpath_encoder),
                             ("fusion", model.fusion),
                             ("decoder", model.decoder),
                             ("image_adapter", model.image_adapter),
-                        ]:
+                        ]
+                        if getattr(model, "use_patch_pos_embed", False):
+                            modules_to_log.append(("patch_pos_embed", model.patch_pos_embed))
+                        for name, module in modules_to_log:
                             total_norm = sum(
                                 p.grad.detach().norm().item() ** 2
                                 for p in module.parameters() if p.grad is not None
@@ -560,7 +723,16 @@ def main() -> None:
 
 
                 if wandb_run is not None and step % args.image_log_every == 0:
-                    log_wandb_heatmaps(wandb_run, log_preds, target_heatmaps, step)
+                    log_wandb_samples(
+                        wandb_run,
+                        image=image,
+                        fixations=fixations,
+                        fixations_len=fixations_len,
+                        log_preds=log_preds,
+                        step=step,
+                        n_samples=4,
+                        tag="train",
+                    )
 
             mean_epoch_kl = epoch_loss_kl / max(epoch_valid_steps, 1)
             mean_epoch_ll = epoch_loss_ll / max(epoch_valid_steps, 1)

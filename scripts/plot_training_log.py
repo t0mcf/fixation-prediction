@@ -58,7 +58,7 @@ def main() -> None:
     print("columns:", list(df.columns), flush=True)
     print(df.tail(), flush=True)
 
-    for metric in ["kl", "nll", "nss"]:
+    for metric in ["kl", "ll", "nss", "auc"]:
         plot_metric(df, metric, output_dir)
 
 

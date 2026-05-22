@@ -54,6 +54,7 @@ def make_dataloader(
     use_grouped_sampler: bool = True,
     max_samples: int = None,
     max_images: int = None,
+    max_paths_per_image: int = None,
     max_seq_len: int = 16,
     prefetch_factor: int = 4,
     **dataset_kwargs,
@@ -64,6 +65,7 @@ def make_dataloader(
         max_seq_len=max_seq_len,
         max_samples=max_samples,
         max_images=max_images,
+        max_paths_per_image=max_paths_per_image,
         **dataset_kwargs,
     )
 

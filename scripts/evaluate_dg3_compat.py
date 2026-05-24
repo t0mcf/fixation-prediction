@@ -8,10 +8,16 @@ so results can be directly compared. Key differences from evaluate_checkpoint.py
   NSS : identical formula, mask-based
   AUC : identical formula, mask-based (pysaliency not required for single fixation)
 
-Resolution: our 64x64 predictions are downsampled to DG3's 28x28 (224px input,
-downsample=2, saliency_map_factor=4) so the log(H*W) normalization term is
-identical on both sides. Downsampling is done by pooling probability mass
-(exp → bilinear interp → renorm → log).
+Resolution: our 64x64 predictions are resized to DG3's output resolution
+(224x224 — scanpather imagenet.yaml uses downsample=1, saliency_map_factor=1,
+and DG3's Finalizer outputs at full image resolution) so the log(H*W)
+normalization term is identical on both sides. Resizing pools probability
+mass (exp → bilinear interp → renorm → log).
+
+With --dg3-val-split the checkpoint is evaluated on the *exact* validation
+images scanpather (DG3) was scored on, reproduced from its split_images()
+logic. Both the full 5000-image set and the contamination-free subset
+(val images not in this checkpoint's own training set) are reported.
 """
 
 from __future__ import annotations
@@ -23,6 +29,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+import pandas as pd
 import torch
 import torch.nn.functional as F
 
@@ -187,6 +194,60 @@ def build_model_from_checkpoint(checkpoint: dict[str, Any], device: str) -> Scan
 
 
 # ---------------------------------------------------------------------------
+# DG3 (scanpather) val-split reproduction
+# ---------------------------------------------------------------------------
+
+def compute_dg3_split_info(
+    parquet_path: str,
+    dg3_seed: int,
+    dg3_n_val: int,
+    ckpt_seed: int,
+    ckpt_max_images: int | None,
+) -> dict[str, Any]:
+    """
+    Reproduce scanpather's fixed validation set and our model's training set,
+    so the checkpoint can be evaluated on exactly the images DG3 was scored on.
+
+    scanpather split_images() (val_n_images branch):
+        all_paths = sorted(df.image_path.unique())
+        val = all_paths[rng(seed).permutation(N)[:n_val]]
+
+    our ScanpathDataset:
+        images = df.image_path.unique()              # appearance order
+        rng(seed).shuffle(images)
+        val   = images[:10%]
+        train = (df minus val).image_path.unique()[:max_images]
+
+    returns dict with: dg3_val, our_train, contaminated, clean (all sets of str)
+    """
+    col = pd.read_parquet(parquet_path, columns=["image_path"])["image_path"]
+
+    # --- their fixed val set ---
+    all_sorted = np.array(sorted(col.unique()))
+    val_idx = np.random.default_rng(dg3_seed).permutation(len(all_sorted))[:dg3_n_val]
+    dg3_val = set(all_sorted[val_idx].tolist())
+
+    # --- our model's training images for this checkpoint ---
+    our_train: set[str] = set()
+    if ckpt_max_images:
+        images = np.array(col.unique())
+        np.random.default_rng(ckpt_seed).shuffle(images)
+        n_val = max(1, int(len(images) * 0.1))
+        our_val = set(images[:n_val].tolist())
+        train_pool = col[~col.isin(our_val)]
+        our_train = set(pd.unique(train_pool)[:ckpt_max_images].tolist())
+
+    contaminated = dg3_val & our_train
+    clean = dg3_val - our_train
+    return {
+        "dg3_val": dg3_val,
+        "our_train": our_train,
+        "contaminated": contaminated,
+        "clean": clean,
+    }
+
+
+# ---------------------------------------------------------------------------
 # evaluation loop
 # ---------------------------------------------------------------------------
 
@@ -285,7 +346,91 @@ def parse_args() -> argparse.Namespace:
                         help="number of batches to evaluate; -1 = full val set")
     parser.add_argument("--eval-resolution", type=int, default=DG3_RESOLUTION,
                         help=f"heatmap resolution for evaluation (default: {DG3_RESOLUTION}, matching DG3)")
+    parser.add_argument("--dg3-val-split", action="store_true",
+                        help="evaluate on the reproduced scanpather (DG3) fixed val set; "
+                             "reports both the full set and the contamination-free subset")
+    parser.add_argument("--dg3-seed", type=int, default=3141,
+                        help="seed for scanpather's split_images (base.yaml: 3141)")
+    parser.add_argument("--dg3-n-val", type=int, default=5000,
+                        help="number of val images in scanpather's split (val_n_images)")
+    parser.add_argument("--dg3-n-scanpaths", type=int, default=10,
+                        help="scanpaths per image: keeps epochs 0..N-1 (val_n_scanpaths)")
     return parser.parse_args()
+
+
+def run_dg3_val_split(
+    args: argparse.Namespace,
+    model: ScanpathModel,
+    device: str,
+    ckpt_args: dict[str, Any],
+    parquet_path: str,
+    imagenet_root: str,
+    max_seq_len: int,
+) -> None:
+    """Evaluate on the reproduced scanpather fixed val set (full set + clean subset)."""
+    ckpt_seed       = ckpt_args.get("seed", 42)
+    ckpt_max_images = ckpt_args.get("max_images", None)
+
+    print("\n" + "=" * 64, flush=True)
+    print("reproducing scanpather (DG3) fixed val set", flush=True)
+    print("=" * 64, flush=True)
+    info = compute_dg3_split_info(
+        parquet_path, args.dg3_seed, args.dg3_n_val, ckpt_seed, ckpt_max_images,
+    )
+    dg3_val      = info["dg3_val"]
+    contaminated = info["contaminated"]
+    clean        = info["clean"]
+
+    print(f"DG3 val images       : {len(dg3_val)}  "
+          f"(seed={args.dg3_seed}, sorted, perm[:{args.dg3_n_val}])", flush=True)
+    if ckpt_max_images:
+        print(f"checkpoint train set : {len(info['our_train'])} images "
+              f"(seed={ckpt_seed}, max_images={ckpt_max_images})", flush=True)
+        print(f"contaminated         : {len(contaminated)} "
+              f"({100 * len(contaminated) / len(dg3_val):.1f}% of val also in training set)",
+              flush=True)
+        print(f"clean subset         : {len(clean)} images", flush=True)
+    else:
+        print("checkpoint has no max_images in args — cannot compute "
+              "contamination; FULL == CLEAN", flush=True)
+    epoch_subset = list(range(args.dg3_n_scanpaths))
+    print(f"scanpaths per image  : epochs {epoch_subset[0]}..{epoch_subset[-1]}", flush=True)
+
+    def _eval(image_set: set, tag: str) -> dict[str, float]:
+        loader = make_dataloader(
+            split="val",
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
+            use_grouped_sampler=False,
+            max_seq_len=max_seq_len,
+            parquet_path=parquet_path,
+            imagenet_root=imagenet_root,
+            image_subset=image_set,
+            epoch_subset=epoch_subset,
+        )
+        print(f"\n[{tag}] dataset rows: {len(loader.dataset)}  — starting evaluation...",
+              flush=True)
+        return evaluate(model, loader, device, args.eval_batches, args.eval_resolution)
+
+    m_full = _eval(dg3_val, "FULL")
+    if ckpt_max_images and len(contaminated) > 0:
+        m_clean = _eval(clean, "CLEAN")
+    else:
+        m_clean = m_full
+
+    print("\n" + "=" * 64, flush=True)
+    print("DG3-compatible evaluation — reproduced scanpather val set", flush=True)
+    print("=" * 64, flush=True)
+    print(f"{'':<20}{'FULL':>16}{'CLEAN':>16}", flush=True)
+    print(f"{'images':<20}{len(dg3_val):>16}{len(clean):>16}", flush=True)
+    print(f"{'valid steps':<20}{int(m_full['steps']):>16}{int(m_clean['steps']):>16}", flush=True)
+    print(f"{'LL (bits)':<20}{m_full['ll_bits']:>16.4f}{m_clean['ll_bits']:>16.4f}", flush=True)
+    print(f"{'NSS (DG3-buggy)':<20}{m_full['nss']:>16.4f}{m_clean['nss']:>16.4f}", flush=True)
+    print(f"{'AUC':<20}{m_full['auc']:>16.4f}{m_clean['auc']:>16.4f}", flush=True)
+    print("=" * 64, flush=True)
+    print("CLEAN = contamination-free subset (val images not in this checkpoint's", flush=True)
+    print("        training set). Use CLEAN for the honest comparison with DG3.", flush=True)
+    print("=" * 64, flush=True)
 
 
 def main() -> None:
@@ -311,6 +456,12 @@ def main() -> None:
 
     model = build_model_from_checkpoint(checkpoint, device)
 
+    if args.dg3_val_split:
+        run_dg3_val_split(args, model, device, ckpt_args,
+                          parquet_path, imagenet_root, max_seq_len)
+        return
+
+    # ---- default: our own seed-based 90/10 val split ----
     val_loader = make_dataloader(
         split="val",
         batch_size=args.batch_size,

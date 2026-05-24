@@ -96,7 +96,7 @@ def evaluate(
     total_valid = 0
 
     for batch_idx, batch in enumerate(loader):
-        if batch_idx >= max_batches:
+        if max_batches > 0 and batch_idx >= max_batches:
             break
 
         image = batch["image"].to(device)

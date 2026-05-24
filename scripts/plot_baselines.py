@@ -13,10 +13,10 @@ import torch
 root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
 
-from scripts.eval_baselines import (
-    build_empirical_density,
-    make_center_gaussian_log_pred,
-    make_uniform_log_pred,
+from scripts.evaluate_baselines import (
+    estimate_empirical_density,
+    make_center_gaussian_log_heatmap,
+    make_uniform_log_heatmap,
 )
 from src.data.dataloader import make_dataloader
 
@@ -80,11 +80,10 @@ def main() -> None:
     print("args:", vars(args), flush=True)
 
     print("building uniform baseline...", flush=True)
-    uniform_log = make_uniform_log_pred(
-        batch_size=1,
-        heatmap_size=args.heatmap_size,
+    uniform_log = make_uniform_log_heatmap(
+        size=args.heatmap_size,
         device=device,
-    )[0]
+    )
     save_heatmap(
         output_dir / "uniform.png",
         uniform_log.exp(),
@@ -92,12 +91,11 @@ def main() -> None:
     )
 
     print("building center gaussian baseline...", flush=True)
-    center_log = make_center_gaussian_log_pred(
-        batch_size=1,
-        heatmap_size=args.heatmap_size,
+    center_log = make_center_gaussian_log_heatmap(
+        size=args.heatmap_size,
         sigma=args.center_sigma,
         device=device,
-    )[0]
+    )
     save_heatmap(
         output_dir / "center_gaussian.png",
         center_log.exp(),
@@ -112,20 +110,17 @@ def main() -> None:
         seed=args.seed,
         max_images=args.max_images,
         use_grouped_sampler=False,
-        heatmap_sigma=args.heatmap_sigma,
-        heatmap_size=args.heatmap_size,
-        max_prefix_len=args.max_prefix_len,
         parquet_path=args.parquet_path,
         imagenet_root=args.imagenet_root,
     )
 
-    print("building empirical density exactly like eval_baselines.py...", flush=True)
-    empirical_log = build_empirical_density(
+    print("building empirical density...", flush=True)
+    empirical_log = estimate_empirical_density(
         loader=train_loader,
         heatmap_size=args.heatmap_size,
+        sigma=args.density_smoothing,
         device=device,
         max_batches=args.density_batches,
-        smoothing=args.density_smoothing,
     )
 
     save_heatmap(

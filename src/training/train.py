@@ -21,8 +21,6 @@ from src.training.losses import (
     make_gaussian_heatmaps_batch,
     multi_step_kl_loss,
     multi_step_ll_score,
-    kl_loss,
-    ll_score,
 )
 from src.training.metrics import nss_score, auc_score
 
@@ -103,12 +101,6 @@ def parse_args() -> argparse.Namespace:
     # optimization
     parser.add_argument("--num-epochs", type=int, default=10)
     parser.add_argument("--lr", type=float, default=1e-4)
-    parser.add_argument(
-        "--encoder-lr-scale",
-        type=float,
-        default=0.1,
-        help="lr multiplier for the pretrained encoder relative to --lr (only active if encoder is unfrozen)",
-    )
     parser.add_argument(
         "--lr-schedule",
         choices=["cosine", "constant"],
@@ -574,7 +566,6 @@ def main() -> None:
     ).to(device)
 
     # the visual encoder is frozen, so only non-encoder params are trainable.
-    # encoder_lr_scale is reserved for future fine-tuning experiments.
     trainable_params = [p for p in model.parameters() if p.requires_grad]
 
     optimizer = AdamW(trainable_params, lr=args.lr, weight_decay=args.weight_decay)
@@ -628,9 +619,6 @@ def main() -> None:
 
                 # targets: fixation[t+1] is the prediction target for step t
                 target_fixations = fixations[:, 1:, :]  # (B, T, 2)
-                target_heatmaps = make_gaussian_heatmaps_batch(
-                    target_fixations, args.heatmap_size, args.heatmap_sigma
-                ).float()
 
                 optimizer.zero_grad(set_to_none=True)
 
@@ -640,10 +628,17 @@ def main() -> None:
 
                 log_preds = log_preds.float()
 
-                loss_kl = multi_step_kl_loss(log_preds, target_heatmaps, fixations_len)
-                loss_ll = multi_step_ll_score(log_preds, target_fixations, fixations_len)
-
-                training_loss = loss_kl if args.loss == "kl" else -loss_ll
+                if args.loss == "kl":
+                    target_heatmaps = make_gaussian_heatmaps_batch(
+                        target_fixations, args.heatmap_size, args.heatmap_sigma
+                    ).float()
+                    loss_kl = multi_step_kl_loss(log_preds, target_heatmaps, fixations_len)
+                    loss_ll = multi_step_ll_score(log_preds, target_fixations, fixations_len)
+                    training_loss = loss_kl
+                else:
+                    loss_ll = multi_step_ll_score(log_preds, target_fixations, fixations_len)
+                    loss_kl = torch.zeros(1, device=device)  # not computed when --loss ll
+                    training_loss = -loss_ll
 
                 if not torch.isfinite(training_loss):
                     raise RuntimeError(f"non-finite loss at step {step}: {training_loss.item()}")

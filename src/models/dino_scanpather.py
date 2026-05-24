@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Dict
-
 import timm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 
-supported_encoders: Dict[str, str] = {
+supported_encoders: dict[str, str] = {
     "dinov2_base": "vit_base_patch14_dinov2",
     "dinov2_base_reg": "vit_base_patch14_reg4_dinov2",
     "dinov2_large": "vit_large_patch14_dinov2",
@@ -180,6 +178,10 @@ class ScanpathEncoder(nn.Module):
         )
 
         x = self.encoder(x, mask=causal_mask, src_key_padding_mask=padding_mask)
+        # when all tokens in a sample are padding (prefix_len=0), the attention
+        # softmax over an all-masked row produces NaN. zero those out — the
+        # fusion layer's all_padding guard discards them anyway.
+        x = torch.nan_to_num(x, nan=0.0)
 
         return self.norm(x)
 

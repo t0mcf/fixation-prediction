@@ -62,7 +62,17 @@ class ScanpathDataset(Dataset):
         max_samples: int = None,
         max_images: int = None,
         max_paths_per_image: int = None,
+        image_subset=None,
+        epoch_subset=None,
     ):
+        """
+        image_subset: explicit iterable of image_path values. When given, the
+                      internal 90/10 split (and max_images/max_samples) are
+                      bypassed entirely and exactly these images are used.
+                      Used for DG3-compatible evaluation on a reproduced val set.
+        epoch_subset: explicit iterable of epoch (subject) IDs to keep. Applied
+                      after image selection, matching DG3 _cap_scanpaths.
+        """
         assert split in ("train", "val")
         self.split = split
         self.max_seq_len = max_seq_len
@@ -70,23 +80,35 @@ class ScanpathDataset(Dataset):
 
         df = pd.read_parquet(parquet_path, engine="pyarrow")
 
-        # deterministic 90/10 split by image
-        rng = np.random.default_rng(seed)
-        images = np.array(df["image_path"].unique())
-        rng.shuffle(images)
-        n_val = max(1, int(len(images) * 0.1))
-        val_images = set(images[:n_val])
-
-        if split == "train":
-            self.df = df[~df["image_path"].isin(val_images)].reset_index(drop=True)
+        if image_subset is not None:
+            # explicit image list — bypass the internal 90/10 split entirely
+            subset = set(image_subset)
+            self.df = df[df["image_path"].isin(subset)].reset_index(drop=True)
         else:
-            self.df = df[df["image_path"].isin(val_images)].reset_index(drop=True)
+            # deterministic 90/10 split by image
+            rng = np.random.default_rng(seed)
+            images = np.array(df["image_path"].unique())
+            rng.shuffle(images)
+            n_val = max(1, int(len(images) * 0.1))
+            val_images = set(images[:n_val])
 
-        if max_images:
-            kept = self.df["image_path"].unique()[:max_images]
-            self.df = self.df[self.df["image_path"].isin(kept)].reset_index(drop=True)
-        elif max_samples and len(self.df) > max_samples:
-            self.df = self.df.iloc[:max_samples].reset_index(drop=True)
+            if split == "train":
+                self.df = df[~df["image_path"].isin(val_images)].reset_index(drop=True)
+            else:
+                self.df = df[df["image_path"].isin(val_images)].reset_index(drop=True)
+
+            if max_images:
+                kept = self.df["image_path"].unique()[:max_images]
+                self.df = self.df[self.df["image_path"].isin(kept)].reset_index(drop=True)
+            elif max_samples and len(self.df) > max_samples:
+                self.df = self.df.iloc[:max_samples].reset_index(drop=True)
+
+        # epoch_subset: keep only specified scanpath/subject IDs.
+        # matches DG3 _cap_scanpaths (global epoch filter, applied after image split).
+        if epoch_subset is not None:
+            self.df = self.df[
+                self.df["epoch"].isin(list(epoch_subset))
+            ].reset_index(drop=True)
 
         if max_paths_per_image:
             self.df = (

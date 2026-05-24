@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 import torch
 import torch.nn.functional as F
 
@@ -118,7 +120,13 @@ def multi_step_ll_score(
 
     log_p = log_preds[b_idx, t_idx, row, col]  # (B, T)
 
-    return (log_p * valid_mask).sum() / total_valid
+    # DG3-compatible LL: bits above uniform baseline (uniform → 0, better → positive).
+    # +log(H*W) centres at 0; /log(2) converts nats→bits. Constant offset has no effect
+    # on gradients; /log(2) scales them by ~1.44x (minor effective-LR change for LL runs).
+    mean_log_p = (log_p * valid_mask).sum() / total_valid
+    return (mean_log_p + math.log(H * W)) / math.log(2)
+    # original (nats, not centred):
+    # return (log_p * valid_mask).sum() / total_valid
 
 
 # kept for single-step evaluation (e.g. flattened valid steps passed directly)
@@ -157,4 +165,7 @@ def ll_score(log_pred: torch.Tensor, target_xy: torch.Tensor) -> torch.Tensor:
     col = torch.round((x + 1.0) / 2.0 * (W - 1)).long().clamp(0, W - 1)
     row = torch.round((y + 1.0) / 2.0 * (H - 1)).long().clamp(0, H - 1)
     log_p = log_pred[torch.arange(B, device=log_pred.device), row, col]
-    return log_p.mean()
+    # DG3-compatible LL: bits above uniform baseline.
+    return (log_p.mean() + math.log(H * W)) / math.log(2)
+    # original (nats, not centred):
+    # return log_p.mean()

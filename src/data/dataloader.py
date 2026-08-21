@@ -29,6 +29,13 @@ class ImageGroupedSampler(Sampler):
             idxs.tolist() for idxs in grouped.values()
             if len(idxs) >= paths_per_image
         ]
+        # TODO: images with fewer than paths_per_image scanpaths are silently
+        # dropped here. This is a workaround for the deduplication assumption in
+        # ScanpathModel.forward() — the model expects consecutive blocks of
+        # exactly paths_per_image identical images in the batch. The clean fix is
+        # to pass image_ids in the batch and use torch.unique(return_inverse=True)
+        # inside forward() to deduplicate regardless of batch layout, removing the
+        # coupling between sampler and model entirely.
 
     def set_epoch(self, epoch: int):
         self.epoch = epoch

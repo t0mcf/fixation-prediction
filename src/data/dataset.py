@@ -1,5 +1,6 @@
 """Scanpath dataset: parquet → (image, fixations, fixations_len)."""
 
+import os
 import numpy as np
 import pandas as pd
 import torch
@@ -7,6 +8,8 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 import functools
+
+from .constants import IMAGENET_MEAN, IMAGENET_STD
 
 
 IMAGENET_ROOT = "/mnt/vast-nhr/projects/nim00018/datasets/ImageNet"
@@ -25,11 +28,24 @@ def _load_image_cached(path: str) -> torch.Tensor:
     return _img_transform(img)
 
 
-_img_transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-])
+# Default: direct resize (what the whole ladder was trained with). Set
+# OURS_CROP_TRANSFORM=1 to use Resize(256)+CenterCrop(224) instead — the
+# standard ImageNet transform that DG3 and the AV generator use. Used to test
+# whether the ours-vs-DG3 coordinate-frame mismatch (engineering_log §19.17)
+# materially changes ours' numbers. Does NOT change default behaviour.
+if os.environ.get("OURS_CROP_TRANSFORM") == "1":
+    _img_transform = transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+    ])
+else:
+    _img_transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+    ])
 
 
 class ScanpathDataset(Dataset):
@@ -42,7 +58,9 @@ class ScanpathDataset(Dataset):
 
     Args:
         split: "train" or "val"
-        seed: random seed for 90/10 image split
+        seed: legacy parameter; the val split is now fixed (5000 images by
+              seed=3141, matching DG3). still accepted for backward compat and
+              used downstream by the dataloader/sampler.
         max_seq_len: maximum total scanpath length (pad/truncate to this)
         imagenet_root: override for ImageNet root path
         parquet_path: override for parquet path
@@ -66,10 +84,22 @@ class ScanpathDataset(Dataset):
         epoch_subset=None,
     ):
         """
+        Canonical val split: 5000 images selected by seed=3141, matching DG3's
+        scanpather/parquet_to_pysaliency.py exactly. Both DG3 and our models hold
+        these same images out from training so training val metrics are directly
+        comparable, and the same set serves as the canonical test set for
+        evaluate_checkpoint.py. The `seed` argument no longer controls the val
+        split (which is fixed by design); it remains in the signature for
+        backward compatibility and is still used by the dataloader/sampler.
+
+        NOTE: runs trained before this change used a seed=42, 90/10 split. Those
+        checkpoints' "val" metrics during training were on a different set and
+        their training data overlaps the canonical val set (severely for the
+        800k model; ~90% of canonical val falls in any seed=42 training pool).
+
         image_subset: explicit iterable of image_path values. When given, the
-                      internal 90/10 split (and max_images/max_samples) are
+                      internal canonical split (and max_images/max_samples) are
                       bypassed entirely and exactly these images are used.
-                      Used for DG3-compatible evaluation on a reproduced val set.
         epoch_subset: explicit iterable of epoch (subject) IDs to keep. Applied
                       after image selection, matching DG3 _cap_scanpaths.
         """
@@ -81,21 +111,32 @@ class ScanpathDataset(Dataset):
         df = pd.read_parquet(parquet_path, engine="pyarrow")
 
         if image_subset is not None:
-            # explicit image list — bypass the internal 90/10 split entirely
+            # explicit image list — bypass the internal canonical split entirely
             subset = set(image_subset)
             self.df = df[df["image_path"].isin(subset)].reset_index(drop=True)
         else:
-            # deterministic 90/10 split by image
-            rng = np.random.default_rng(seed)
-            images = np.array(df["image_path"].unique())
-            rng.shuffle(images)
-            n_val = max(1, int(len(images) * 0.1))
-            val_images = set(images[:n_val])
+            # Canonical val split, identical to DG3's selection:
+            # key = last two path components ("class/image.JPEG"), which gives
+            # the same sort order as DG3's transformed absolute paths (their
+            # IMAGE_BASE prefix is constant and drops out of the sort). Verified
+            # to produce the exact same 5000-image val set as DG3 (seed=3141).
+            def _canonical_key(p):
+                parts = p.split('/')
+                return parts[-2] + '/' + parts[-1]
+
+            keys = df["image_path"].map(_canonical_key)
+            unique_keys = sorted(keys.unique())
+            rng_canon = np.random.default_rng(3141)
+            val_keys = set(
+                unique_keys[i]
+                for i in rng_canon.permutation(len(unique_keys))[:5000]
+            )
+            is_val = keys.isin(val_keys)
 
             if split == "train":
-                self.df = df[~df["image_path"].isin(val_images)].reset_index(drop=True)
+                self.df = df[~is_val].reset_index(drop=True)
             else:
-                self.df = df[df["image_path"].isin(val_images)].reset_index(drop=True)
+                self.df = df[is_val].reset_index(drop=True)
 
             if max_images:
                 kept = self.df["image_path"].unique()[:max_images]

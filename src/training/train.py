@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+import pandas as pd
 import torch
 from torch.optim import AdamW
 
@@ -21,6 +22,8 @@ from src.training.losses import (
     make_gaussian_heatmaps_batch,
     multi_step_kl_loss,
     multi_step_ll_score,
+    kl_loss,
+    ll_score,
 )
 from src.training.metrics import nss_score, auc_score
 
@@ -38,6 +41,31 @@ def parse_args() -> argparse.Namespace:
 
     # data
     parser.add_argument("--parquet-path", default=default_parquet_path)
+    parser.add_argument(
+        "--train-parquet-path", default=None,
+        help="train on this parquet WHOLESALE (all its images; bypasses the "
+             "canonical split, which misbehaves on small parquets) while the "
+             "val loader keeps --parquet-path's canonical val. For generated "
+             "pretraining data (e.g. ScanDiff-generated scanpaths).")
+    parser.add_argument(
+        "--train-image-subset-parquet", default=None,
+        help="restrict TRAINING images to those present in this parquet "
+             "(data still comes from --parquet-path). For image-paired "
+             "controls against a --train-parquet-path run.")
+    parser.add_argument(
+        "--train-image-list", default=None,
+        help="text file with one image per line, as 'class/file.JPEG' or a full "
+             "path; only these images are used for training. Matching is on the "
+             "last two path components, so the protocol split files can be used "
+             "directly. Overrides --max-images, which selects images in parquet "
+             "order and therefore -- since the parquet is sorted by class -- "
+             "gives degenerate class coverage at small scales.")
+    parser.add_argument(
+        "--train-scanpath-ids", type=int, nargs="+", default=None,
+        help="keep only these scanpath (epoch) IDs for training, e.g. 0 1 2 3 4. "
+             "Without this the sampler draws a fresh subset of the 16 available "
+             "paths every epoch, so the model eventually sees all of them; "
+             "DeepGaze III and ScanDiff both train on a fixed 0-4.")
     parser.add_argument("--imagenet-root", default=default_imagenet_root)
     parser.add_argument("--max-images", type=int, default=1000)
     parser.add_argument("--batch-size", type=int, default=16)
@@ -78,6 +106,11 @@ def parse_args() -> argparse.Namespace:
              "feature channels, which is disruptive for spatial heatmap structure).",
     )
     parser.add_argument("--decoder-hidden-channels", type=int, default=256)
+    parser.add_argument("--decoder-upsample", default="nearest",
+                        choices=["nearest", "bilinear", "transposed"],
+                        help="upsampling used in the heatmap decoder. 'nearest' is "
+                             "the default the whole ladder was trained with; the "
+                             "other two exist for the decoder ablation.")
     parser.add_argument("--max-seq-len", type=int, default=16,
                         help="maximum total scanpath length (full sequence including first fixation)")
     parser.add_argument(
@@ -96,6 +129,35 @@ def parse_args() -> argparse.Namespace:
         help="use parallel co-attention in fusion layers: image patches and scanpath tokens "
              "mutually attend to each other (both directions computed in parallel using "
              "pre-update representations as K, V). doubles fusion layer parameter count.",
+    )
+    parser.add_argument(
+        "--fixation-query-fusion", action="store_true",
+        help="reverse fusion direction: fixation tokens attend to image patches (instead of "
+             "image patches attending to fixation tokens). produces enriched fixation memories "
+             "which are then decoded via a second cross-attention. mutually exclusive with "
+             "--bidirectional-fusion.",
+    )
+    parser.add_argument(
+        "--use-finalizer", action="store_true",
+        help="DG3-style readout finalizer: learnable Gaussian blur on the predicted "
+             "heatmap before log-softmax (optimal LL smoothing under fixation noise).",
+    )
+    parser.add_argument(
+        "--use-centerbias", action="store_true",
+        help="add a DG3-style additive center-bias log-prior (learnable weight) to the "
+             "readout. For --dataset mit1003 the prior is fit on the training fold; "
+             "implies a finalizer. No-op unless a center bias is fit.",
+    )
+    parser.add_argument(
+        "--use-saccadeprior", action="store_true",
+        help="add a DG3-inspired additive saccade-delta log-prior (learnable weight "
+             "sacc_alpha) to the readout: a 1st-order Markov p(next_cell - prev_cell) "
+             "kernel, fit on the training fold and placed at each step's previous-"
+             "fixation cell. For --dataset mit1003 only; implies a finalizer.",
+    )
+    parser.add_argument(
+        "--finalizer-init-sigma", type=float, default=1.0,
+        help="initial Gaussian blur sigma (in heatmap cells) for --use-finalizer.",
     )
 
     # optimization
@@ -129,11 +191,35 @@ def parse_args() -> argparse.Namespace:
                         help="validation batches per epoch; -1 = full val set")
     parser.add_argument("--resume", default=None, help="path to a checkpoint to resume from")
 
+    # fine-tuning
+    parser.add_argument("--dataset", choices=["synthetic", "mit1003"], default="synthetic",
+                        help="'synthetic' = ImageNet parquet scanpaths; 'mit1003' = human fixations")
+    parser.add_argument("--init-from", default=None,
+                        help="load model weights only (fresh optimizer/schedule) for fine-tuning. "
+                             "Unlike --resume, does not restore optimizer/epoch/step.")
+    parser.add_argument("--freeze", nargs="*", default=[],
+                        help="module name prefixes to freeze, e.g. scanpath_encoder fusion image_adapter")
+    parser.add_argument("--readout-only", action="store_true",
+                        help="freeze everything except the decoder (spatial readout head)")
+    parser.add_argument("--val-frac", type=float, default=0.1,
+                        help="fraction of MIT1003 images held out for validation (image-wise split)")
+    parser.add_argument("--cv-fold", type=int, default=None,
+                        help="MIT1003 cross-validation: which fold (0-indexed) to use as validation. "
+                             "Overrides --val-frac when set.")
+    parser.add_argument("--cv-num-folds", type=int, default=10,
+                        help="number of cross-validation folds (only used with --cv-fold)")
+    parser.add_argument("--no-save-checkpoints", action="store_true",
+                        help="skip writing model checkpoints (only log.csv). For CV folds / "
+                             "sweeps where the trained weights are disposable — saves disk.")
+
     # wandb
     parser.add_argument("--use-wandb", action="store_true")
     parser.add_argument("--wandb-project", default="fixation-prediction")
     parser.add_argument("--wandb-entity", default=None)
     parser.add_argument("--wandb-name", default=None)
+    parser.add_argument("--wandb-group", default=None,
+                        help="wandb group — e.g. set to the CV condition so all 10 folds "
+                             "appear as one group with automatic mean/std across folds")
     parser.add_argument("--wandb-dir", default="wandb")
     parser.add_argument("--wandb-mode", choices=["online", "offline"], default="online")
     parser.add_argument("--image-log-every", type=int, default=500)
@@ -193,6 +279,7 @@ def init_wandb(args: argparse.Namespace):
         project=args.wandb_project,
         entity=args.wandb_entity,
         name=args.wandb_name,
+        group=args.wandb_group,
         dir=args.wandb_dir,
         mode=args.wandb_mode,
         config=vars(args),
@@ -387,8 +474,8 @@ def evaluate(
         if not valid_flat.any():
             continue
 
-        lp = log_preds.view(B * T, *log_preds.shape[2:])[valid_flat]       # (V, H, W)
-        th = target_heatmaps.view(B * T, *target_heatmaps.shape[2:])[valid_flat]  # (V, H, W)
+        lp = log_preds.reshape(B * T, *log_preds.shape[2:])[valid_flat]       # (V, H, W)
+        th = target_heatmaps.reshape(B * T, *target_heatmaps.shape[2:])[valid_flat]  # (V, H, W)
         txy = target_fixations.reshape(B * T, 2)[valid_flat]                # (V, 2)
         n_valid = valid_flat.sum().item()
 
@@ -419,7 +506,8 @@ def run_validation(
     model, val_loader, optimizer, scheduler, scaler,
     device, step, epoch, epoch_float, use_amp, args,
     log_path, checkpoint_dir, wandb_run, best_val_kl, best_val_nss,
-) -> tuple[float, float]:
+    best_val_ll=float("-inf"),
+) -> tuple[float, float, float]:
     metrics = evaluate(
         model=model,
         loader=val_loader,
@@ -467,19 +555,29 @@ def run_validation(
 
     if metrics["val_kl"] < best_val_kl:
         best_val_kl = metrics["val_kl"]
-        best_path = checkpoint_dir / "best_val_kl.pt"
-        save_checkpoint(best_path, model, optimizer, scheduler, step, epoch, args,
-                        scaler, best_val_kl, best_val_nss)
-        print(f"saved new best val kl checkpoint (val_kl={best_val_kl:.4f})", flush=True)
+        if not args.no_save_checkpoints:
+            best_path = checkpoint_dir / "best_val_kl.pt"
+            save_checkpoint(best_path, model, optimizer, scheduler, step, epoch, args,
+                            scaler, best_val_kl, best_val_nss)
+            print(f"saved new best val kl checkpoint (val_kl={best_val_kl:.4f})", flush=True)
 
     if metrics["val_nss"] > best_val_nss:
         best_val_nss = metrics["val_nss"]
-        best_path = checkpoint_dir / "best_val_nss.pt"
-        save_checkpoint(best_path, model, optimizer, scheduler, step, epoch, args,
-                        scaler, best_val_kl, best_val_nss)
-        print(f"saved new best val nss checkpoint (val_nss={best_val_nss:.4f})", flush=True)
+        if not args.no_save_checkpoints:
+            best_path = checkpoint_dir / "best_val_nss.pt"
+            save_checkpoint(best_path, model, optimizer, scheduler, step, epoch, args,
+                            scaler, best_val_kl, best_val_nss)
+            print(f"saved new best val nss checkpoint (val_nss={best_val_nss:.4f})", flush=True)
 
-    return best_val_kl, best_val_nss
+    if metrics["val_ll"] > best_val_ll:
+        best_val_ll = metrics["val_ll"]
+        if not args.no_save_checkpoints:
+            best_path = checkpoint_dir / "best_val_ll.pt"
+            save_checkpoint(best_path, model, optimizer, scheduler, step, epoch, args,
+                            scaler, best_val_kl, best_val_nss)
+            print(f"saved new best val ll checkpoint (val_ll={best_val_ll:.4f})", flush=True)
+
+    return best_val_kl, best_val_nss, best_val_ll
 
 
 def main() -> None:
@@ -489,9 +587,9 @@ def main() -> None:
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
     torch.cuda.manual_seed_all(args.seed)
-    # benchmark=True lets cuDNN pick the fastest conv algorithm per input shape.
+    # benchmark=True lets cuDNN pick the fastest conv algorithm per input shape
     # deterministic=False because AMP isn't bit-exact reproducible anyway, and
-    # the deterministic conv path is significantly slower on A100.
+    # the deterministic conv path is significantly slower on A100
     torch.backends.cudnn.deterministic = False
     torch.backends.cudnn.benchmark = True
 
@@ -502,8 +600,29 @@ def main() -> None:
     if args.amp and not use_amp:
         print("warning: --amp requested but device is not cuda, disabling", flush=True)
 
+    # The image transform is chosen at import time in src/data/dataset.py from an
+    # environment variable, so it is invisible in the checkpoint unless recorded
+    # here. Without this, a crop-trained run cannot be told apart from a
+    # resize-trained one after the fact, and evaluating one with the other's
+    # transform silently produces a train/eval mismatch.
+    args.ours_crop_transform = os.environ.get("OURS_CROP_TRANSFORM") == "1"
+    # ImageGroupedSampler guarantees consecutive same-image groups only for
+    # the synthetic parquet dataset. MIT1003 uses a regular shuffled loader;
+    # reusing one image encoding for `paths_per_image` consecutive records
+    # there would silently assign features from the wrong images.
+    args.effective_paths_per_image = (
+        args.paths_per_image if args.dataset == "synthetic" else 1
+    )
+    if args.dataset != "synthetic" and args.paths_per_image != 1:
+        print(
+            f"forcing effective_paths_per_image=1 for {args.dataset} "
+            f"(requested/default value was {args.paths_per_image})",
+            flush=True,
+        )
+
     print(f"device: {device}", flush=True)
     print(f"amp: {use_amp}", flush=True)
+    print(f"image transform: {'Resize(256)+CenterCrop(224)' if args.ours_crop_transform else 'Resize((224,224))'}", flush=True)
     print("args:", vars(args), flush=True)
 
     output_dir = Path(args.output_dir)
@@ -515,30 +634,105 @@ def main() -> None:
 
     wandb_run = init_wandb(args)
 
-    train_loader = make_dataloader(
-        split="train",
-        batch_size=args.batch_size,
-        num_workers=args.num_workers,
-        seed=args.seed,
-        max_images=args.max_images,
-        use_grouped_sampler=True,
-        paths_per_image=args.paths_per_image,
-        max_seq_len=args.max_seq_len,
-        parquet_path=args.parquet_path,
-        imagenet_root=args.imagenet_root,
-    )
+    if args.dataset == "mit1003":
+        from src.data.mit1003_dataset import make_mit1003_loader, MIT1003Dataset
 
-    val_loader = make_dataloader(
-        split="val",
-        batch_size=args.batch_size,
-        num_workers=args.num_workers,
-        seed=args.seed,
-        max_images=None,
-        use_grouped_sampler=False,
-        max_seq_len=args.max_seq_len,
-        parquet_path=args.parquet_path,
-        imagenet_root=args.imagenet_root,
-    )
+        # image-wise train/val split: val images are completely unseen.
+        n_images = 1003
+        rng = np.random.default_rng(args.seed)
+        perm = rng.permutation(n_images)
+
+        if args.cv_fold is not None:
+            # k-fold CV: deterministically partition the shuffled images into
+            # cv_num_folds contiguous chunks; fold cv_fold is the validation set.
+            # Every image is a validation image in exactly one fold.
+            folds = np.array_split(perm, args.cv_num_folds)
+            val_images   = sorted(folds[args.cv_fold].tolist())
+            train_images = sorted(np.concatenate(
+                [folds[i] for i in range(args.cv_num_folds) if i != args.cv_fold]
+            ).tolist())
+            print(f"MIT1003 CV fold {args.cv_fold}/{args.cv_num_folds}: "
+                  f"{len(train_images)} train, {len(val_images)} val images", flush=True)
+        else:
+            n_val = int(round(args.val_frac * n_images))
+            val_images   = sorted(perm[:n_val].tolist())
+            train_images = sorted(perm[n_val:].tolist())
+            print(f"MIT1003 split: {len(train_images)} train, {len(val_images)} val images", flush=True)
+
+        train_loader = make_mit1003_loader(
+            batch_size=args.batch_size, num_workers=args.num_workers,
+            max_seq_len=args.max_seq_len, image_indices=train_images,
+            shuffle=True, seed=args.seed,
+        )
+        val_loader = make_mit1003_loader(
+            batch_size=args.batch_size, num_workers=args.num_workers,
+            max_seq_len=args.max_seq_len, image_indices=val_images,
+            shuffle=False, seed=args.seed,
+        )
+    else:
+        train_parquet = args.train_parquet_path or args.parquet_path
+        train_subset = None
+        if args.train_image_list:
+            # protocol split files store 'class/file.JPEG'; the parquet stores a
+            # longer prefixed path. Match on the last two components, and fail
+            # loudly rather than silently training on a subset of the subset.
+            def _key(p):
+                a = p.strip().split("/")
+                return a[-2] + "/" + a[-1]
+
+            wanted = {_key(l) for l in open(args.train_image_list) if l.strip()}
+            available = (pd.read_parquet(train_parquet, engine="pyarrow",
+                                         columns=["image_path"])["image_path"]
+                         .unique().tolist())
+            by_key = {_key(p): p for p in available}
+            missing = wanted - by_key.keys()
+            if missing:
+                raise SystemExit(
+                    f"{len(missing)} of {len(wanted)} images from "
+                    f"{args.train_image_list} are not in {train_parquet}, "
+                    f"e.g. {sorted(missing)[:3]}")
+            train_subset = [by_key[k] for k in sorted(wanted)]
+            print(f"training restricted to {len(train_subset)} images "
+                  f"from {args.train_image_list}", flush=True)
+        elif args.train_parquet_path or args.train_image_subset_parquet:
+            subset_src = args.train_parquet_path or args.train_image_subset_parquet
+            train_subset = (
+                pd.read_parquet(subset_src, engine="pyarrow", columns=["image_path"])
+                ["image_path"].unique().tolist()
+            )
+            print(f"training restricted to {len(train_subset)} images "
+                  f"from {subset_src}", flush=True)
+
+        if args.train_scanpath_ids:
+            print(f"training scanpath IDs fixed to {args.train_scanpath_ids} "
+                  f"(no per-epoch resampling)", flush=True)
+
+        train_loader = make_dataloader(
+            split="train",
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
+            seed=args.seed,
+            max_images=(None if train_subset else args.max_images),
+            use_grouped_sampler=True,
+            paths_per_image=args.paths_per_image,
+            max_seq_len=args.max_seq_len,
+            parquet_path=train_parquet,
+            image_subset=train_subset,
+            epoch_subset=args.train_scanpath_ids,
+            imagenet_root=args.imagenet_root,
+        )
+
+        val_loader = make_dataloader(
+            split="val",
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
+            seed=args.seed,
+            max_images=None,
+            use_grouped_sampler=False,
+            max_seq_len=args.max_seq_len,
+            parquet_path=args.parquet_path,
+            imagenet_root=args.imagenet_root,
+        )
 
     steps_per_epoch = len(train_loader)
     total_steps = args.num_epochs * steps_per_epoch
@@ -560,13 +754,94 @@ def main() -> None:
         dropout=args.dropout,
         decoder_dropout=args.decoder_dropout,
         decoder_hidden_channels=args.decoder_hidden_channels,
+        decoder_upsample=args.decoder_upsample,
         use_visual_scanpath_features=args.visual_scanpath_features,
         use_patch_pos_embed=args.patch_pos_embed,
         use_bidirectional_fusion=args.bidirectional_fusion,
+        use_fixation_query_fusion=args.fixation_query_fusion,
+        use_finalizer=args.use_finalizer,
+        use_centerbias=args.use_centerbias,
+        use_saccadeprior=args.use_saccadeprior,
+        finalizer_init_sigma=args.finalizer_init_sigma,
     ).to(device)
+
+    # --- fine-tuning: load pretrained weights only (fresh optimizer/schedule) ---
+    if args.init_from is not None:
+        ckpt = torch.load(args.init_from, map_location=device)
+        state = ckpt["model_state"] if "model_state" in ckpt else ckpt
+        missing, unexpected = model.load_state_dict(state, strict=False)
+        print(f"initialized from {args.init_from} | "
+              f"missing={len(missing)} unexpected={len(unexpected)}", flush=True)
+        if missing:
+            print(f"  missing keys (newly-initialised): {missing[:8]}{' …' if len(missing) > 8 else ''}", flush=True)
+
+    # --- center bias: fit on the training-fold fixations, populate the finalizer prior ---
+    if args.use_centerbias:
+        if args.dataset != "mit1003":
+            raise ValueError("--use-centerbias currently only wired for --dataset mit1003")
+        from src.eval.fair_metrics import fit_centerbias_tuned
+        # all real fixations per image (synthetic centre fixation excluded,
+        # untruncated), from the raw records — matches eval_mit1003_fair.py
+        cb_ds = MIT1003Dataset(max_seq_len=args.max_seq_len, min_fixations=3,
+                               image_indices=train_images)
+        by_img: dict[int, list[np.ndarray]] = {}
+        for rec in cb_ds._records:
+            H, W = cb_ds._img_shapes[rec["img_idx"]]
+            n = rec["n_valid"]
+            x = np.clip((rec["xs"][:n] / (W - 1)) * 2.0 - 1.0, -1.0, 1.0)
+            y = np.clip((rec["ys"][:n] / (H - 1)) * 2.0 - 1.0, -1.0, 1.0)
+            by_img.setdefault(rec["img_idx"], []).append(
+                np.stack([x, y], axis=1).astype(np.float32))
+        cb_per_img = [np.concatenate(v, axis=0) for v in by_img.values()]
+        cb_log = fit_centerbias_tuned(cb_per_img, args.heatmap_size,
+                                      device=str(device), verbose=True)
+        model.finalizer.set_centerbias(cb_log)
+        n_cb = sum(len(a) for a in cb_per_img)
+        print(f"fit tuned center bias on {n_cb} training fixations "
+              f"({args.heatmap_size}x{args.heatmap_size} grid)", flush=True)
+
+    # --- saccade-delta prior: 1st-order Markov p(next_cell - prev_cell) ---
+    if args.use_saccadeprior:
+        if args.dataset != "mit1003":
+            raise ValueError("--use-saccadeprior currently only wired for --dataset mit1003")
+        from src.eval.fair_metrics import fit_saccade_prior_tuned, scanpath_deltas_by_image
+        # per-image list of per-SCANPATH arrays (boundaries preserved, unlike
+        # the center-bias by_img above) -- deltas must never cross subjects.
+        sacc_ds = MIT1003Dataset(max_seq_len=args.max_seq_len, min_fixations=3,
+                                 image_indices=train_images)
+        sacc_by_img: dict[int, list[np.ndarray]] = {}
+        for rec in sacc_ds._records:
+            H, W = sacc_ds._img_shapes[rec["img_idx"]]
+            n = rec["n_valid"]
+            x = np.clip((rec["xs"][:n] / (W - 1)) * 2.0 - 1.0, -1.0, 1.0)
+            y = np.clip((rec["ys"][:n] / (H - 1)) * 2.0 - 1.0, -1.0, 1.0)
+            sacc_by_img.setdefault(rec["img_idx"], []).append(
+                np.stack([x, y], axis=1).astype(np.float32))
+        sacc_per_img = [sacc_by_img[k] for k in sorted(sacc_by_img)]
+        delta_per_img = scanpath_deltas_by_image(sacc_per_img)
+        sacc_log = fit_saccade_prior_tuned(delta_per_img, args.heatmap_size, verbose=True)
+        model.set_saccadeprior(sacc_log.to(device))
+        n_delta = sum(len(a) for a in delta_per_img)
+        print(f"fit tuned saccade-delta prior on {n_delta} training saccades "
+              f"({args.heatmap_size}x{args.heatmap_size} grid)", flush=True)
+
+    # --- freezing: --readout-only freezes all but the decoder; --freeze takes prefixes ---
+    freeze_prefixes = list(args.freeze)
+    if args.readout_only:
+        # freeze everything except the SpatialHeatmapDecoder ('decoder.'),
+        # i.e. keep decoder_cross_attn and all upstream modules frozen.
+        for name, p in model.named_parameters():
+            if not name.startswith("decoder."):
+                p.requires_grad = False
+    for name, p in model.named_parameters():
+        if any(name.startswith(pfx) for pfx in freeze_prefixes):
+            p.requires_grad = False
 
     # the visual encoder is frozen, so only non-encoder params are trainable.
     trainable_params = [p for p in model.parameters() if p.requires_grad]
+    n_trainable = sum(p.numel() for p in trainable_params)
+    print(f"trainable parameters: {n_trainable:,} "
+          f"({len(trainable_params)} tensors)", flush=True)
 
     optimizer = AdamW(trainable_params, lr=args.lr, weight_decay=args.weight_decay)
 
@@ -583,6 +858,7 @@ def main() -> None:
     step = 0
     best_val_kl = float("inf")
     best_val_nss = float("-inf")
+    best_val_ll = float("-inf")
 
     if args.resume is not None:
         ckpt = torch.load(args.resume, map_location=device)
@@ -623,8 +899,13 @@ def main() -> None:
                 optimizer.zero_grad(set_to_none=True)
 
                 with torch.autocast(device_type=device_type, enabled=use_amp):
-                    log_preds = model(image, fixations, fixations_len, args.ignore_prefix,
-                                      paths_per_image=args.paths_per_image)
+                    log_preds = model(
+                        image,
+                        fixations,
+                        fixations_len,
+                        args.ignore_prefix,
+                        paths_per_image=args.effective_paths_per_image,
+                    )
 
                 log_preds = log_preds.float()
 
@@ -636,8 +917,11 @@ def main() -> None:
                     loss_ll = multi_step_ll_score(log_preds, target_fixations, fixations_len)
                     training_loss = loss_kl
                 else:
+                    target_heatmaps = make_gaussian_heatmaps_batch(
+                        target_fixations, args.heatmap_size, args.heatmap_sigma
+                    ).float()
+                    loss_kl = multi_step_kl_loss(log_preds, target_heatmaps, fixations_len)
                     loss_ll = multi_step_ll_score(log_preds, target_fixations, fixations_len)
-                    loss_kl = torch.zeros(1, device=device)  # not computed when --loss ll
                     training_loss = -loss_ll
 
                 if not torch.isfinite(training_loss):
@@ -744,25 +1028,28 @@ def main() -> None:
                     step=step,
                 )
 
-            best_val_kl, best_val_nss = run_validation(
+            best_val_kl, best_val_nss, best_val_ll = run_validation(
                 model=model, val_loader=val_loader, optimizer=optimizer,
                 scheduler=scheduler, scaler=scaler, device=device,
                 step=step, epoch=epoch, epoch_float=float(epoch + 1),
                 use_amp=use_amp, args=args, log_path=log_path,
                 checkpoint_dir=checkpoint_dir, wandb_run=wandb_run,
                 best_val_kl=best_val_kl, best_val_nss=best_val_nss,
+                best_val_ll=best_val_ll,
             )
 
-            latest_path = checkpoint_dir / "latest.pt"
-            save_checkpoint(latest_path, model, optimizer, scheduler,
-                            step, epoch, args, scaler, best_val_kl, best_val_nss)
-            print(f"saved latest checkpoint: {latest_path}", flush=True)
+            if not args.no_save_checkpoints:
+                latest_path = checkpoint_dir / "latest.pt"
+                save_checkpoint(latest_path, model, optimizer, scheduler,
+                                step, epoch, args, scaler, best_val_kl, best_val_nss)
+                print(f"saved latest checkpoint: {latest_path}", flush=True)
 
-        final_path = checkpoint_dir / "final.pt"
-        final_epoch = epoch if "epoch" in locals() else start_epoch - 1
-        save_checkpoint(final_path, model, optimizer, scheduler,
-                        step, final_epoch, args, scaler, best_val_kl, best_val_nss)
-        print(f"saved final checkpoint: {final_path}", flush=True)
+        if not args.no_save_checkpoints:
+            final_path = checkpoint_dir / "final.pt"
+            final_epoch = epoch if "epoch" in locals() else start_epoch - 1
+            save_checkpoint(final_path, model, optimizer, scheduler,
+                            step, final_epoch, args, scaler, best_val_kl, best_val_nss)
+            print(f"saved final checkpoint: {final_path}", flush=True)
         print(f"total steps: {step}", flush=True)
         print(f"best val kl: {best_val_kl:.4f}", flush=True)
         print(f"best val nss: {best_val_nss:.4f}", flush=True)

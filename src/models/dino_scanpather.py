@@ -377,6 +377,90 @@ class BidirectionalCrossAttentionFusion(nn.Module):
         return image_tokens, scanpath_tokens
 
 
+class FixationQueryFusion(nn.Module):
+    """
+    Reverse fusion: fixation tokens attend to image patches.
+
+    Each fixation token queries the full image to gather visual context,
+    producing enriched fixation memories that encode "what was seen at each
+    previous fixation location." The decoder then uses these memories to
+    predict the next fixation location.
+
+    Has the same external signature as CrossAttentionFusion so it can be
+    used transparently in the fusion loop.
+
+    input:
+        image_tokens:    (B, N, d_model)  — keys and values (never padded)
+        scanpath_tokens: (B, T, d_model)  — queries
+        prefix_len:      (B,)
+
+    output:
+        enriched_fixation_tokens: (B, T, d_model)
+        (padded positions are zeroed out)
+    """
+
+    def __init__(
+        self,
+        d_model: int = 256,
+        n_heads: int = 8,
+        dropout: float = 0.1,
+    ) -> None:
+        super().__init__()
+
+        self.cross_attn = nn.MultiheadAttention(
+            embed_dim=d_model,
+            num_heads=n_heads,
+            dropout=dropout,
+            batch_first=True,
+        )
+
+        self.norm1 = nn.LayerNorm(d_model)
+        self.norm2 = nn.LayerNorm(d_model)
+
+        self.ffn = nn.Sequential(
+            nn.Linear(d_model, 4 * d_model),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(4 * d_model, d_model),
+            nn.Dropout(dropout),
+        )
+
+    def forward(
+        self,
+        image_tokens: torch.Tensor,
+        scanpath_tokens: torch.Tensor,
+        prefix_len: torch.Tensor,
+    ) -> torch.Tensor:
+        """
+        image_tokens:    (B, N, d_model)  — K, V (image patches, never padded)
+        scanpath_tokens: (B, T, d_model)  — Q (fixation history)
+        prefix_len:      (B,)
+        returns: (B, T, d_model) enriched fixation tokens
+        """
+        _, T, _ = scanpath_tokens.shape
+        device = scanpath_tokens.device
+
+        # image tokens are never padded → no key_padding_mask needed on the K/V side
+        attn_out, _ = self.cross_attn(
+            query=scanpath_tokens,
+            key=image_tokens,
+            value=image_tokens,
+            need_weights=False,
+        )
+
+        x = self.norm1(scanpath_tokens + attn_out)
+        x = self.norm2(x + self.ffn(x))
+
+        # zero padded fixation positions so they don't pollute the decoder
+        # cross-attention (where they appear as K/V and would be masked anyway)
+        padding_mask = (
+            torch.arange(T, device=device).unsqueeze(0) >= prefix_len.unsqueeze(1)
+        )  # (B, T)
+        x = x.masked_fill(padding_mask.unsqueeze(-1), 0.0)
+
+        return x
+
+
 class SpatialHeatmapDecoder(nn.Module):
     """
     decodes history-conditioned patch tokens into spatial heatmap logits.
@@ -400,33 +484,59 @@ class SpatialHeatmapDecoder(nn.Module):
         heatmap_size: int = 64,
         hidden_channels: int = 256,
         dropout: float = 0.0,
+        upsample: str = "nearest",
     ) -> None:
         super().__init__()
 
         self.patch_grid_size = patch_grid_size
         self.heatmap_size = heatmap_size
+        self.upsample = upsample
 
+        def _up_block(c_in: int, c_out: int) -> list[nn.Module]:
+            """One 2x upsampling stage. The three variants are the ones compared
+            in the decoder ablation (engineering_log §2.6-2.8):
+              nearest     -- default. trivial memory copy + 3x3 conv with full
+                             overlap, so no structural periodicity.
+              bilinear    -- the original implementation; the PyTorch kernel was
+                             found to be pathologically slow at these shapes.
+              transposed  -- fast, but kernel_size=2/stride=2 has no kernel
+                             overlap between adjacent outputs -> checkerboard.
+            """
+            if upsample == "transposed":
+                return [nn.ConvTranspose2d(c_in, c_out, kernel_size=2, stride=2)]
+            if upsample == "bilinear":
+                mode_kwargs = dict(mode="bilinear", align_corners=False)
+            elif upsample == "nearest":
+                mode_kwargs = dict(mode="nearest")
+            else:
+                raise ValueError(
+                    f"unknown upsample mode {upsample!r}; "
+                    "expected 'nearest', 'bilinear' or 'transposed'"
+                )
+            return [
+                nn.Upsample(scale_factor=2, **mode_kwargs),
+                nn.Conv2d(c_in, c_out, kernel_size=3, padding=1),
+            ]
+
+        h = hidden_channels
         self.net = nn.Sequential(
-            nn.Conv2d(d_model, hidden_channels, kernel_size=3, padding=1),
-            nn.GroupNorm(num_groups=8, num_channels=hidden_channels),
+            nn.Conv2d(d_model, h, kernel_size=3, padding=1),
+            nn.GroupNorm(num_groups=8, num_channels=h),
             nn.GELU(),
             nn.Dropout2d(dropout),
 
-            # 16×16 → 32×32: nearest upsample + conv avoids checkerboard artifacts
-            # (transposed conv with kernel_size=2 has no kernel overlap → checkerboard)
-            nn.Upsample(scale_factor=2, mode="nearest"),
-            nn.Conv2d(hidden_channels, hidden_channels // 2, kernel_size=3, padding=1),
-            nn.GroupNorm(num_groups=8, num_channels=hidden_channels // 2),
+            # 16×16 → 32×32
+            *_up_block(h, h // 2),
+            nn.GroupNorm(num_groups=8, num_channels=h // 2),
             nn.GELU(),
             nn.Dropout2d(dropout),
 
             # 32×32 → 64×64
-            nn.Upsample(scale_factor=2, mode="nearest"),
-            nn.Conv2d(hidden_channels // 2, hidden_channels // 4, kernel_size=3, padding=1),
-            nn.GroupNorm(num_groups=8, num_channels=hidden_channels // 4),
+            *_up_block(h // 2, h // 4),
+            nn.GroupNorm(num_groups=8, num_channels=h // 4),
             nn.GELU(),
 
-            nn.Conv2d(hidden_channels // 4, 1, kernel_size=1),
+            nn.Conv2d(h // 4, 1, kernel_size=1),
         )
 
     def forward(self, patch_tokens: torch.Tensor) -> torch.Tensor:
@@ -445,6 +555,125 @@ class SpatialHeatmapDecoder(nn.Module):
         )
 
         return self.net(x).squeeze(1)
+
+
+class Finalizer(nn.Module):
+    """
+    DeepGaze-III-style readout finalizer, applied to the decoder's raw heatmap
+    logits just before the log-softmax that turns them into a log-density.
+
+    Three DG3-inspired inductive biases, all finetune-time-only (default off,
+    so pretraining and old checkpoints are byte-for-byte unaffected):
+
+      * learnable Gaussian blur (`learn_sigma`): separable Gaussian in
+        probability space with a single learnable sigma (log-parameterised so
+        it stays positive). This is the optimal LL smoothing under fixation
+        localisation noise -- DG3's Finalizer does exactly this.
+      * additive center-bias log-prior (`use_centerbias`): a per-dataset log
+        prior added in log space with a learnable weight `cb_alpha`, then
+        renormalised. The prior itself is a registered buffer set at finetune
+        time via set_centerbias() (fit on the training fold). Default uniform
+        (zeros) is a no-op, so it only ever helps once populated.
+      * additive saccade-delta log-prior (`use_saccadeprior`): a 1st-order
+        Markov p(next_cell - prev_cell) kernel, added in log space with a
+        learnable weight `sacc_alpha`, placed at each sample's previous-
+        fixation cell (see set_saccadeprior / src/eval/fair_metrics.py's
+        fit_saccade_prior_tuned for the fitting side, and the diagnostic
+        script scripts/saccade_prior_baseline.py for how much of DG3's LL
+        advantage this factor alone explains without any image content:
+        ~0.31 bits over the center bias, well short of either model's real
+        performance). Needs prev_xy at forward time; silently skipped
+        (no-op) when prev_xy is None, e.g. the ignore_prefix zero-shot path.
+
+    forward: (N, H, W) raw logits, optional (N, 2) previous-fixation coords
+             in [-1,1] -> (N, H, W) log-softmax density.
+    """
+
+    def __init__(
+        self,
+        grid: int,
+        init_sigma: float = 1.0,
+        learn_sigma: bool = True,
+        use_centerbias: bool = True,
+        use_saccadeprior: bool = False,
+        max_sigma_cells: float = 6.0,
+    ) -> None:
+        super().__init__()
+        self.grid = grid
+        import math as _math
+        self.log_sigma = nn.Parameter(
+            torch.tensor(float(_math.log(init_sigma))), requires_grad=learn_sigma
+        )
+        # kernel wide enough to not truncate a blur up to max_sigma_cells;
+        # if the learned sigma grows past this, truncation acts as a mild cap.
+        self.kernel_radius = max(3, int(_math.ceil(3.0 * max_sigma_cells)))
+
+        self.use_centerbias = use_centerbias
+        if use_centerbias:
+            self.cb_alpha = nn.Parameter(torch.tensor(1.0))
+            self.register_buffer("centerbias", torch.zeros(grid, grid))
+
+        self.use_saccadeprior = use_saccadeprior
+        if use_saccadeprior:
+            self.sacc_alpha = nn.Parameter(torch.tensor(1.0))
+            self.register_buffer("saccade_delta", torch.zeros(2 * grid - 1, 2 * grid - 1))
+
+    def set_centerbias(self, log_density: torch.Tensor) -> None:
+        """Populate the center-bias prior. log_density: (grid, grid), logsumexp==0."""
+        assert self.use_centerbias, "model was built without a center-bias node"
+        assert log_density.shape == (self.grid, self.grid)
+        self.centerbias.copy_(log_density.to(self.centerbias))
+
+    def set_saccadeprior(self, log_density: torch.Tensor) -> None:
+        """Populate the saccade-delta prior. log_density: (2*grid-1, 2*grid-1)."""
+        assert self.use_saccadeprior, "model was built without a saccade-prior node"
+        assert log_density.shape == (2 * self.grid - 1, 2 * self.grid - 1)
+        self.saccade_delta.copy_(log_density.to(self.saccade_delta))
+
+    def _saccade_maps(self, prev_row: torch.Tensor, prev_col: torch.Tensor) -> torch.Tensor:
+        """Place the fitted delta kernel at each sample's previous-fixation
+        cell and crop to the visible grid. (N,) row/col -> (N, grid, grid)."""
+        N, grid = prev_row.shape[0], self.grid
+        device = prev_row.device
+        r = torch.arange(grid, device=device).view(1, grid, 1).expand(N, grid, grid)
+        c = torch.arange(grid, device=device).view(1, 1, grid).expand(N, grid, grid)
+        idx_row = (r - prev_row.view(N, 1, 1)) + (grid - 1)
+        idx_col = (c - prev_col.view(N, 1, 1)) + (grid - 1)
+        return self.saccade_delta[idx_row, idx_col]
+
+    def _gaussian_1d(self, device, dtype):
+        sigma = self.log_sigma.exp().clamp(min=1e-2)
+        ax = torch.arange(-self.kernel_radius, self.kernel_radius + 1,
+                          device=device, dtype=dtype)
+        k = torch.exp(-0.5 * (ax / sigma) ** 2)
+        return k / k.sum()
+
+    def forward(self, logit: torch.Tensor, prev_xy: torch.Tensor | None = None) -> torch.Tensor:
+        N, H, W = logit.shape
+        # Run entirely in fp32 with autocast disabled: the softmax -> log -> blur
+        # -> log chain underflows in fp16 (clamp_min(1e-12) is below fp16's
+        # smallest value, so log(0) = -inf leaks into the loss). The plain
+        # log_softmax path is fp16-stable, but this one is not, so we force fp32.
+        with torch.autocast(device_type=logit.device.type, enabled=False):
+            logit = logit.float()
+            # blur in probability space (keeps mass, differentiable in log_sigma)
+            prob = F.softmax(logit.reshape(N, -1), dim=-1).reshape(N, 1, H, W)
+            k = self._gaussian_1d(logit.device, prob.dtype)
+            r = self.kernel_radius
+            prob = F.conv2d(prob, k.view(1, 1, 1, -1), padding=(0, r))
+            prob = F.conv2d(prob, k.view(1, 1, -1, 1), padding=(r, 0))
+            logp = torch.log(prob.clamp_min(1e-12)).reshape(N, H, W)
+
+            if self.use_centerbias:
+                logp = logp + self.cb_alpha * self.centerbias.unsqueeze(0)
+
+            if self.use_saccadeprior and prev_xy is not None:
+                prev_xy = prev_xy.float()
+                col = ((prev_xy[:, 0] + 1.0) / 2.0 * (self.grid - 1)).round().long().clamp(0, self.grid - 1)
+                row = ((prev_xy[:, 1] + 1.0) / 2.0 * (self.grid - 1)).round().long().clamp(0, self.grid - 1)
+                logp = logp + self.sacc_alpha * self._saccade_maps(row, col)
+
+            return F.log_softmax(logp.reshape(N, -1), dim=-1).reshape(N, H, W)
 
 
 class ScanpathModel(nn.Module):
@@ -480,14 +709,26 @@ class ScanpathModel(nn.Module):
         dropout: float = 0.1,
         decoder_dropout: float | None = None,
         decoder_hidden_channels: int = 256,
+        decoder_upsample: str = "nearest",
         use_visual_scanpath_features: bool = False,
         use_patch_pos_embed: bool = False,
         use_bidirectional_fusion: bool = False,
+        use_fixation_query_fusion: bool = False,
+        use_finalizer: bool = False,
+        use_centerbias: bool = False,
+        use_saccadeprior: bool = False,
+        finalizer_init_sigma: float = 1.0,
     ) -> None:
         super().__init__()
 
+        if use_bidirectional_fusion and use_fixation_query_fusion:
+            raise ValueError(
+                "use_bidirectional_fusion and use_fixation_query_fusion are mutually exclusive"
+            )
+
         self.max_seq_len = max_seq_len
         self.use_bidirectional_fusion = use_bidirectional_fusion
+        self.use_fixation_query_fusion = use_fixation_query_fusion
 
         self.image_encoder = FrozenVisualPatchEncoder(
             model_name=visual_encoder,
@@ -520,11 +761,26 @@ class ScanpathModel(nn.Module):
             use_visual_features=use_visual_scanpath_features,
         )
 
-        FusionCls = BidirectionalCrossAttentionFusion if use_bidirectional_fusion else CrossAttentionFusion
+        if use_fixation_query_fusion:
+            FusionCls = FixationQueryFusion
+        elif use_bidirectional_fusion:
+            FusionCls = BidirectionalCrossAttentionFusion
+        else:
+            FusionCls = CrossAttentionFusion
+
         self.fusion = nn.ModuleList([
             FusionCls(d_model=d_model, n_heads=n_heads, dropout=dropout)
             for _ in range(fusion_layers)
         ])
+
+        # fixation-query mode needs a second cross-attention to convert enriched
+        # fixation tokens back to image-space tokens for the spatial decoder.
+        # image patches (Q) attend to fixation memories (K/V). reuses CrossAttentionFusion
+        # since it already handles that direction and its padding mask correctly.
+        if use_fixation_query_fusion:
+            self.decoder_cross_attn = CrossAttentionFusion(
+                d_model=d_model, n_heads=n_heads, dropout=dropout
+            )
 
         # decoder applies Dropout2d which zeroes entire feature channels.
         # at high rates this disrupts the spatial heatmap structure badly,
@@ -538,9 +794,35 @@ class ScanpathModel(nn.Module):
             heatmap_size=heatmap_size,
             hidden_channels=decoder_hidden_channels,
             dropout=effective_decoder_dropout,
+            upsample=decoder_upsample,
         )
 
         self.heatmap_size = heatmap_size
+
+        # DG3-style readout finalizer (learnable blur + center-bias prior).
+        # Built only when requested so default/old checkpoints are unchanged.
+        # Blur sigma is learnable whenever the finalizer exists; the center-bias
+        # node is added on top only if use_centerbias.
+        self.finalizer = None
+        if use_finalizer or use_centerbias or use_saccadeprior:
+            self.finalizer = Finalizer(
+                grid=heatmap_size,
+                init_sigma=finalizer_init_sigma,
+                learn_sigma=use_finalizer,
+                use_centerbias=use_centerbias,
+                use_saccadeprior=use_saccadeprior,
+            )
+
+    def _finalize(self, logit: torch.Tensor, prev_xy: torch.Tensor | None = None) -> torch.Tensor:
+        """Raw decoder logits (N,H,W) -> log-density, via the finalizer if present."""
+        if self.finalizer is not None:
+            return self.finalizer(logit, prev_xy)
+        N = logit.shape[0]
+        return F.log_softmax(logit.reshape(N, -1), dim=-1).view_as(logit)
+
+    def set_saccadeprior(self, log_density: torch.Tensor) -> None:
+        assert self.finalizer is not None, "model was built without a finalizer"
+        self.finalizer.set_saccadeprior(log_density)
 
     def encode_image(self, image: torch.Tensor) -> torch.Tensor:
         patch_tokens = self.image_encoder(image)
@@ -558,6 +840,7 @@ class ScanpathModel(nn.Module):
         fixations_len: torch.Tensor,
         ignore_prefix: bool = False,
         paths_per_image: int = 1,
+        image_tokens: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         image: (B, 3, 224, 224)
@@ -568,24 +851,33 @@ class ScanpathModel(nn.Module):
             training to run the image encoder only once per unique image instead
             of once per scanpath, giving a paths_per_image-fold speedup on the
             encoder. leave at 1 (default) during validation/inference.
+        image_tokens: optional precomputed encoder output (B, N, d_model). When
+            given, the frozen image encoder is skipped — used by autoregressive
+            sampling to encode each image once and reuse it across all steps.
         returns: (B, max_seq_len - 1, heatmap_size, heatmap_size)
         """
         B = image.shape[0]
         T = fixations.shape[1] - 1  # number of prediction steps
 
-        if paths_per_image > 1 and B % paths_per_image == 0:
-            # grouped sampler: image[0:P] are identical, image[P:2P] identical, etc.
-            # run the encoder only on the unique images then tile the result.
-            unique_images = image[::paths_per_image]           # (B//P, 3, H, W)
-            image_tokens = self.encode_image(unique_images).repeat_interleave(
-                paths_per_image, dim=0
-            )                                                  # (B, N, d_model)
-        else:
-            image_tokens = self.encode_image(image)            # (B, N, d_model)
+        if image_tokens is None:
+            if paths_per_image > 1 and B % paths_per_image == 0:
+                # grouped sampler: image[0:P] are identical, image[P:2P] identical, etc.
+                # run the encoder only on the unique images then tile the result.
+                # repeat_interleave (not repeat): keeps the [A,A,B,B] layout that
+                # matches the batch, whereas repeat would give [A,B,A,B].
+                # TODO: this assumes the batch layout is guaranteed by ImageGroupedSampler.
+                # A more robust approach is to pass image_ids and use torch.unique()
+                # here — see the TODO in dataloader.py ImageGroupedSampler.__init__.
+                unique_images = image[::paths_per_image]           # (B//P, 3, H, W)
+                image_tokens = self.encode_image(unique_images).repeat_interleave(
+                    paths_per_image, dim=0
+                )                                                  # (B, N, d_model)
+            else:
+                image_tokens = self.encode_image(image)            # (B, N, d_model)
 
         if ignore_prefix:
             logit = self.decoder(image_tokens)  # (B, H, W)
-            log_h = F.log_softmax(logit.view(B, -1), dim=-1).view_as(logit)
+            log_h = self._finalize(logit)
             return log_h.unsqueeze(1).expand(-1, T, -1, -1)
 
         prefix = fixations[:, :-1, :]  # (B, T, 2)
@@ -620,15 +912,27 @@ class ScanpathModel(nn.Module):
         image_tiled = image_tokens.repeat_interleave(T, dim=0)    # (B*T, N, d_model)
         scan_tiled = scanpath_tokens.repeat_interleave(T, dim=0)  # (B*T, T, d_model)
 
-        fused = image_tiled
-        scan_fused = scan_tiled
-        for layer in self.fusion:
-            if self.use_bidirectional_fusion:
-                fused, scan_fused = layer(fused, scan_fused, eff_len_flat)
-            else:
-                fused = layer(fused, scan_fused, eff_len_flat)
+        if self.use_fixation_query_fusion:
+            # fixation-query path: fixations attend to image → enriched fixation memories,
+            # then image patches attend to those memories → decoder-ready image tokens.
+            enriched = scan_tiled                                      # (B*T, T, d_model)
+            for layer in self.fusion:
+                enriched = layer(image_tiled, enriched, eff_len_flat)  # FixationQueryFusion
+            fused = self.decoder_cross_attn(image_tiled, enriched, eff_len_flat)  # (B*T, N, d_model)
+        else:
+            # original path — untouched
+            fused = image_tiled
+            scan_fused = scan_tiled
+            for layer in self.fusion:
+                if self.use_bidirectional_fusion:
+                    fused, scan_fused = layer(fused, scan_fused, eff_len_flat)
+                else:
+                    fused = layer(fused, scan_fused, eff_len_flat)
 
         logit = self.decoder(fused)  # (B*T, H, W)
-        log_h = F.log_softmax(logit.view(B * T, -1), dim=-1).view_as(logit)
+        # prev_xy[b*T+t] = fixations[b, t] = the fixation immediately preceding
+        # the one predicted at step t (prefix already holds fixations[:, :-1, :]).
+        prev_xy = prefix.reshape(B * T, 2)
+        log_h = self._finalize(logit, prev_xy)
 
         return log_h.view(B, T, self.heatmap_size, self.heatmap_size)

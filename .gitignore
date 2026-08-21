@@ -1,7 +1,6 @@
 data/*.parquet
 logs/
 runs/
-runs/
 wandb/
 *.out
 *.err
@@ -12,3 +11,13 @@ __pycache__/
 *.pt
 *.pth
 *.ckpt
+
+# Literature and slide decks live next to the work but do not belong in git:
+# they are third-party binaries, and they are 33 MB of the working tree.
+docs/*.pdf
+docs/*.pptx
+
+# Large rendered images kept for reference. Figures that a script can rebuild
+# belong in docs/meeting_plots/ instead, together with the script that makes them.
+docs/geom_crop_vs_resize.png
+docs/hat_alignment_check.png

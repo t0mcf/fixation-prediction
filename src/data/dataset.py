@@ -31,7 +31,7 @@ def _load_image_cached(path: str) -> torch.Tensor:
 # Default: direct resize (what the whole ladder was trained with). Set
 # OURS_CROP_TRANSFORM=1 to use Resize(256)+CenterCrop(224) instead — the
 # standard ImageNet transform that DG3 and the AV generator use. Used to test
-# whether the ours-vs-DG3 coordinate-frame mismatch (engineering_log §19.17)
+# whether the ours-vs-DG3 coordinate-frame mismatch
 # materially changes ours' numbers. Does NOT change default behaviour.
 if os.environ.get("OURS_CROP_TRANSFORM") == "1":
     _img_transform = transforms.Compose([

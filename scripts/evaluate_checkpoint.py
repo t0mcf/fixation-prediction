@@ -67,9 +67,12 @@ def build_model_from_checkpoint(checkpoint: dict[str, Any], device: str) -> Scan
         dropout=ckpt_args.get("dropout", 0.1),
         decoder_dropout=ckpt_args.get("decoder_dropout", None),
         decoder_hidden_channels=ckpt_args.get("decoder_hidden_channels", 256),
+        decoder_upsample=ckpt_args.get("decoder_upsample", "nearest"),
+
         use_visual_scanpath_features=ckpt_args.get("visual_scanpath_features", False),
         use_patch_pos_embed=ckpt_args.get("patch_pos_embed", False),
         use_bidirectional_fusion=ckpt_args.get("bidirectional_fusion", False),
+        use_fixation_query_fusion=ckpt_args.get("fixation_query_fusion", False),
     ).to(device)
 
     model.load_state_dict(checkpoint["model_state"])

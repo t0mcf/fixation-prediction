@@ -208,6 +208,14 @@ def parse_args() -> argparse.Namespace:
                              "Overrides --val-frac when set.")
     parser.add_argument("--cv-num-folds", type=int, default=10,
                         help="number of cross-validation folds (only used with --cv-fold)")
+    parser.add_argument("--mit-split-dir", type=str, default=None,
+                        help="MIT1003 FIXED splits: directory with train.txt / validation.txt "
+                             "(one image filename per line), e.g. the authors' ScanDiff splits "
+                             "in thesis_protocol/v2/splits/mit1003. Replaces --cv-fold / "
+                             "--val-frac; the leakage-proof protocol for the fine-tuning wave "
+                             "(the official SDgen teacher trained on the authors' train split, "
+                             "so CV folds over all 1003 images are contaminated). test.txt is "
+                             "never read here.")
     parser.add_argument("--no-save-checkpoints", action="store_true",
                         help="skip writing model checkpoints (only log.csv). For CV folds / "
                              "sweeps where the trained weights are disposable — saves disk.")
@@ -642,7 +650,32 @@ def main() -> None:
         rng = np.random.default_rng(args.seed)
         perm = rng.permutation(n_images)
 
-        if args.cv_fold is not None:
+        if args.mit_split_dir is not None:
+            # Fixed authors' splits (leakage-proof fine-tuning protocol).
+            assert args.cv_fold is None, "--mit-split-dir and --cv-fold are mutually exclusive"
+            import h5py
+            from src.data.mit1003_dataset import MIT1003_ROOT
+            split_dir = Path(args.mit_split_dir)
+            with h5py.File(MIT1003_ROOT / "stimuli.hdf5", "r") as f:
+                fnames = [fn.decode() if isinstance(fn, bytes) else fn
+                          for fn in f["filenames"][:]]
+            name_to_idx = {Path(fn).name.lower(): i for i, fn in enumerate(fnames)}
+
+            def _load_split(fname):
+                wanted = [l.strip() for l in open(split_dir / fname) if l.strip()]
+                missing = [w for w in wanted if Path(w).name.lower() not in name_to_idx]
+                if missing:
+                    raise SystemExit(f"{fname}: {len(missing)} images not found in "
+                                     f"stimuli.hdf5, e.g. {missing[:3]}")
+                return sorted(name_to_idx[Path(w).name.lower()] for w in wanted)
+
+            train_images = _load_split("train.txt")
+            val_images = _load_split("validation.txt")
+            overlap = set(train_images) & set(val_images)
+            assert not overlap, f"train/val overlap: {len(overlap)} images"
+            print(f"MIT1003 FIXED splits from {split_dir}: "
+                  f"{len(train_images)} train, {len(val_images)} val images", flush=True)
+        elif args.cv_fold is not None:
             # k-fold CV: deterministically partition the shuffled images into
             # cv_num_folds contiguous chunks; fold cv_fold is the validation set.
             # Every image is a validation image in exactly one fold.

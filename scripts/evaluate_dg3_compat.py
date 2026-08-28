@@ -38,6 +38,8 @@ sys.path.insert(0, str(root))
 
 from src.data.dataloader import make_dataloader
 from src.models.dino_scanpather import ScanpathModel
+from src.training.metrics import nss_score as our_nss_score, auc_score as our_auc_score
+from src.training.losses import ll_score as our_ll_score
 
 
 default_parquet_path = (
@@ -184,6 +186,8 @@ def build_model_from_checkpoint(checkpoint: dict[str, Any], device: str) -> Scan
         dropout=ckpt_args.get("dropout", 0.1),
         decoder_dropout=ckpt_args.get("decoder_dropout", None),
         decoder_hidden_channels=ckpt_args.get("decoder_hidden_channels", 256),
+        decoder_upsample=ckpt_args.get("decoder_upsample", "nearest"),
+
         use_visual_scanpath_features=ckpt_args.get("visual_scanpath_features", False),
         use_patch_pos_embed=ckpt_args.get("patch_pos_embed", False),
         use_bidirectional_fusion=ckpt_args.get("bidirectional_fusion", False),
@@ -261,9 +265,14 @@ def evaluate(
 ) -> dict[str, float]:
     model.eval()
 
-    total_ll  = 0.0
-    total_nss = 0.0
-    total_auc = 0.0
+    # DG3-formula metrics (at eval_resolution, e.g. 224, for DG3 comparison)
+    total_ll_dg3  = 0.0
+    total_nss_dg3 = 0.0
+    total_auc_dg3 = 0.0
+    # Our-formula metrics (at native 64x64, matching our training-time val numbers)
+    total_ll_ours  = 0.0
+    total_nss_ours = 0.0
+    total_auc_ours = 0.0
     total_valid = 0
 
     for batch_idx, batch in enumerate(loader):
@@ -294,34 +303,45 @@ def evaluate(
         txy = target_fixations.reshape(B * T, 2)[valid_flat]                # (N, 2)
         n_valid = int(valid_flat.sum().item())
 
-        # resize to DG3 resolution
+        # === DG3-formula metrics (at eval_resolution) ===
         lp_resized = resize_log_predictions(lp, eval_resolution)            # (N, R, R)
+        fix_mask   = coords_to_fixation_mask(txy, eval_resolution, eval_resolution)  # (N, R, R)
+        total_ll_dg3  += dg3_log_likelihood(lp_resized, fix_mask).item() * n_valid
+        total_nss_dg3 += dg3_nss(lp_resized, fix_mask).item() * n_valid
+        total_auc_dg3 += dg3_auc(lp_resized, fix_mask).item() * n_valid
 
-        # build fixation masks at DG3 resolution
-        fix_mask = coords_to_fixation_mask(txy, eval_resolution, eval_resolution)  # (N, R, R)
+        # === Our-formula metrics (at native 64x64, matching training-time logs) ===
+        # our nss_score / auc_score / ll_score consume (N, H, W) log_preds and (N, 2) target_xy
+        total_ll_ours  += our_ll_score(lp,  txy).item() * n_valid
+        total_nss_ours += our_nss_score(lp, txy).item() * n_valid
+        total_auc_ours += our_auc_score(lp, txy).item() * n_valid
 
-        total_ll  += dg3_log_likelihood(lp_resized, fix_mask).item() * n_valid
-        total_nss += dg3_nss(lp_resized, fix_mask).item() * n_valid
-        total_auc += dg3_auc(lp_resized, fix_mask).item() * n_valid
         total_valid += n_valid
 
         if batch_idx % 10 == 0:
             print(
                 f"batch {batch_idx:04d} | valid={n_valid} | "
-                f"ll={total_ll/total_valid:.4f} bits | "
-                f"nss={total_nss/total_valid:.4f} | "
-                f"auc={total_auc/total_valid:.4f}",
+                f"[ours] nss={total_nss_ours/total_valid:.4f} ll={total_ll_ours/total_valid:.4f} "
+                f"auc={total_auc_ours/total_valid:.4f} | "
+                f"[dg3] nss={total_nss_dg3/total_valid:.4f} ll={total_ll_dg3/total_valid:.4f} bits",
                 flush=True,
             )
 
     if total_valid == 0:
-        return {"steps": 0, "ll_bits": float("nan"), "nss": float("nan"), "auc": float("nan")}
+        return {"steps": 0,
+                "ll_bits": float("nan"), "nss": float("nan"), "auc": float("nan"),
+                "ll_ours": float("nan"), "nss_ours": float("nan"), "auc_ours": float("nan")}
 
     return {
-        "steps":   total_valid,
-        "ll_bits": total_ll  / total_valid,
-        "nss":     total_nss / total_valid,
-        "auc":     total_auc / total_valid,
+        "steps":    total_valid,
+        # DG3-formula
+        "ll_bits":  total_ll_dg3  / total_valid,
+        "nss":      total_nss_dg3 / total_valid,
+        "auc":      total_auc_dg3 / total_valid,
+        # ours
+        "ll_ours":  total_ll_ours  / total_valid,
+        "nss_ours": total_nss_ours / total_valid,
+        "auc_ours": total_auc_ours / total_valid,
     }
 
 
@@ -418,19 +438,27 @@ def run_dg3_val_split(
     else:
         m_clean = m_full
 
-    print("\n" + "=" * 64, flush=True)
-    print("DG3-compatible evaluation — reproduced scanpather val set", flush=True)
-    print("=" * 64, flush=True)
-    print(f"{'':<20}{'FULL':>16}{'CLEAN':>16}", flush=True)
-    print(f"{'images':<20}{len(dg3_val):>16}{len(clean):>16}", flush=True)
-    print(f"{'valid steps':<20}{int(m_full['steps']):>16}{int(m_clean['steps']):>16}", flush=True)
-    print(f"{'LL (bits)':<20}{m_full['ll_bits']:>16.4f}{m_clean['ll_bits']:>16.4f}", flush=True)
-    print(f"{'NSS (DG3-buggy)':<20}{m_full['nss']:>16.4f}{m_clean['nss']:>16.4f}", flush=True)
-    print(f"{'AUC':<20}{m_full['auc']:>16.4f}{m_clean['auc']:>16.4f}", flush=True)
-    print("=" * 64, flush=True)
-    print("CLEAN = contamination-free subset (val images not in this checkpoint's", flush=True)
-    print("        training set). Use CLEAN for the honest comparison with DG3.", flush=True)
-    print("=" * 64, flush=True)
+    print("\n" + "=" * 80, flush=True)
+    print("Evaluation on reproduced scanpather (DG3) val set — OURS vs DG3 formulas", flush=True)
+    print("=" * 80, flush=True)
+    print(f"{'':<28}{'FULL':>16}{'CLEAN':>16}", flush=True)
+    print(f"{'images':<28}{len(dg3_val):>16}{len(clean):>16}", flush=True)
+    print(f"{'valid steps':<28}{int(m_full['steps']):>16}{int(m_clean['steps']):>16}", flush=True)
+    print("-" * 80, flush=True)
+    print("OURS (our metric formulas @ native 64x64; matches training-time logs)", flush=True)
+    print(f"{'  NSS (ours)':<28}{m_full['nss_ours']:>16.4f}{m_clean['nss_ours']:>16.4f}", flush=True)
+    print(f"{'  LL  (ours, log-prob)':<28}{m_full['ll_ours']:>16.4f}{m_clean['ll_ours']:>16.4f}", flush=True)
+    print(f"{'  AUC (ours)':<28}{m_full['auc_ours']:>16.4f}{m_clean['auc_ours']:>16.4f}", flush=True)
+    print("-" * 80, flush=True)
+    print(f"DG3 (DG3 formulas @ {args.eval_resolution}x{args.eval_resolution}; matches DG3 published numbers)", flush=True)
+    print(f"{'  NSS (DG3-buggy formula)':<28}{m_full['nss']:>16.4f}{m_clean['nss']:>16.4f}", flush=True)
+    print(f"{'  LL  (DG3, bits)':<28}{m_full['ll_bits']:>16.4f}{m_clean['ll_bits']:>16.4f}", flush=True)
+    print(f"{'  AUC (DG3)':<28}{m_full['auc']:>16.4f}{m_clean['auc']:>16.4f}", flush=True)
+    print("=" * 80, flush=True)
+    print("CLEAN = canonical val images not in this checkpoint's training set.", flush=True)
+    print("Use OURS columns to compare against this repo's training val logs and new", flush=True)
+    print("runs. Use DG3 columns for direct comparison against scanpather baselines.", flush=True)
+    print("=" * 80, flush=True)
 
 
 def main() -> None:

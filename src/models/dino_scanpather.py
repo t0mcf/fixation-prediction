@@ -494,7 +494,7 @@ class SpatialHeatmapDecoder(nn.Module):
 
         def _up_block(c_in: int, c_out: int) -> list[nn.Module]:
             """One 2x upsampling stage. The three variants are the ones compared
-            in the decoder ablation (engineering_log §2.6-2.8):
+            in the decoder ablation:
               nearest     -- default. trivial memory copy + 3x3 conv with full
                              overlap, so no structural periodicity.
               bilinear    -- the original implementation; the PyTorch kernel was

@@ -21,3 +21,5 @@ docs/*.pptx
 # belong in docs/meeting_plots/ instead, together with the script that makes them.
 docs/geom_crop_vs_resize.png
 docs/hat_alignment_check.png
+runs
+wandb

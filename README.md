@@ -81,7 +81,10 @@ Data and model checkpoints are not included.
    `scripts/sample_for_eval.py` (`slurm/sample_ours_*.sh`) and scored with
    `tools/score_scanpaths.py` from `third_party/scandiff/`, the same scorer
    as for DeepGaze III and ScanDiff.
-5. **Tables and figures** (CPU only):
+5. **Tables and figures.** No GPU is needed. The first four commands
+   aggregate the raw evaluation outputs on the cluster into the CSVs in
+   `docs/report_tables/`; the last two run from those CSVs alone, so the
+   thesis tables and figures can be rebuilt from this repository.
 
    ```bash
    python scripts/aggregate_v2_results.py --split test     # docs/report_tables/*_test.csv

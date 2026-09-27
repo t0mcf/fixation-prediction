@@ -1,0 +1,31 @@
+device: cuda
+eval resolution: 224x224 (DG3 native = 224x224)
+LL unit: bits, uniform baseline = 0.0
+checkpoint: runs/v2_50k_5p_ll_seed43/checkpoints/best_val_ll.pt
+step: 11718  epoch: 5
+
+val samples: 16000
+starting evaluation...
+
+batch 0000 | valid=1920 | [ours] nss=3.4536 ll=3.0278 auc=0.9447 | [dg3] nss=10.8790 ll=2.9996 bits
+batch 0010 | valid=1920 | [ours] nss=3.8968 ll=3.1292 auc=0.9448 | [dg3] nss=15.4361 ll=3.1122 bits
+batch 0020 | valid=1920 | [ours] nss=3.8733 ll=3.0576 auc=0.9393 | [dg3] nss=16.2882 ll=3.0385 bits
+batch 0030 | valid=1920 | [ours] nss=3.6265 ll=2.8887 auc=0.9324 | [dg3] nss=14.3324 ll=2.8670 bits
+batch 0040 | valid=1920 | [ours] nss=3.5407 ll=2.8280 auc=0.9297 | [dg3] nss=13.5410 ll=2.8052 bits
+batch 0050 | valid=1920 | [ours] nss=3.5047 ll=2.7749 auc=0.9261 | [dg3] nss=13.5613 ll=2.7521 bits
+batch 0060 | valid=1920 | [ours] nss=3.6244 ll=2.8385 auc=0.9285 | [dg3] nss=14.6562 ll=2.8168 bits
+batch 0070 | valid=1920 | [ours] nss=3.7167 ll=2.8914 auc=0.9303 | [dg3] nss=15.3050 ll=2.8700 bits
+batch 0080 | valid=1920 | [ours] nss=3.5696 ll=2.7899 auc=0.9255 | [dg3] nss=14.2339 ll=2.7684 bits
+batch 0090 | valid=1920 | [ours] nss=3.6538 ll=2.8437 auc=0.9275 | [dg3] nss=14.9931 ll=2.8219 bits
+batch 0100 | valid=1920 | [ours] nss=3.7134 ll=2.8808 auc=0.9290 | [dg3] nss=15.3611 ll=2.8581 bits
+batch 0110 | valid=1920 | [ours] nss=3.7791 ll=2.9124 auc=0.9302 | [dg3] nss=15.8209 ll=2.8902 bits
+batch 0120 | valid=1920 | [ours] nss=3.8379 ll=2.9400 auc=0.9310 | [dg3] nss=16.2843 ll=2.9182 bits
+
+==================================================
+DG3-compatible evaluation results
+==================================================
+valid steps : 240000
+LL (bits)   : 2.9299  [uniform=0, higher=better]
+NSS         : 16.4030
+AUC         : 0.9302
+==================================================

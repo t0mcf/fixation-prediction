@@ -29,6 +29,11 @@ class ImageGroupedSampler(Sampler):
             idxs.tolist() for idxs in grouped.values()
             if len(idxs) >= paths_per_image
         ]
+        if getattr(dataset, "hflip_double", False):
+            # mirrored copies live at index + N and are distinct images to the
+            # encoder, so they form their own orientation-pure groups
+            n = len(dataset.df)
+            self.groups += [[i + n for i in g] for g in self.groups]
         # TODO: images with fewer than paths_per_image scanpaths are silently
         # dropped here. This is a workaround for the deduplication assumption in
         # ScanpathModel.forward() — the model expects consecutive blocks of
@@ -50,6 +55,31 @@ class ImageGroupedSampler(Sampler):
 
     def __len__(self):
         return len(self.groups) * self.paths_per_image
+
+
+def image_subset_from_list(list_path: str, parquet_path: str) -> list[str]:
+    """Resolve a protocol split file ('class/file.JPEG' per line, e.g.
+    thesis_protocol/v2/splits/imagenet_av/test_10k.txt) to the parquet's
+    image_path strings, matching on the last two path components exactly as
+    train.py does for --train-image-list. Fails loudly on any missing image so
+    an evaluation can never silently run on a subset of the split."""
+    import pandas as pd
+
+    def _key(p: str) -> str:
+        a = p.strip().split("/")
+        return a[-2] + "/" + a[-1]
+
+    wanted = {_key(l) for l in open(list_path) if l.strip()}
+    available = (pd.read_parquet(parquet_path, engine="pyarrow",
+                                 columns=["image_path"])["image_path"]
+                 .unique().tolist())
+    by_key = {_key(p): p for p in available}
+    missing = wanted - by_key.keys()
+    if missing:
+        raise SystemExit(f"{len(missing)} of {len(wanted)} images from "
+                         f"{list_path} are not in {parquet_path}, "
+                         f"e.g. {sorted(missing)[:3]}")
+    return [by_key[k] for k in sorted(wanted)]
 
 
 def make_dataloader(

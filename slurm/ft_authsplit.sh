@@ -26,10 +26,17 @@ case "$COND" in
   sd5)     INIT="runs/triangle_sd5_v2u_100k/checkpoints/final.pt" ;;
   avfull)  INIT="runs/triangle_avfull_v2u_100k/checkpoints/final.pt" ;;
   avmatch) INIT="runs/triangle_avmatch_v2u_100k/checkpoints/final.pt" ;;
+  shuffled) INIT="runs/triangle_shuffled_v2u_100k/checkpoints/final.pt" ;;
   # pretraining-SCALE transfer axis: the v2 ladder checkpoints (18-epoch
   # pretraining protocol, vs the triangle's 30 — two documented axes).
   lad1k|lad10k|lad50k|lad100k|lad200k|lad400k|lad800k)
     INIT="runs/v2_${COND#lad}_5p_ll_seed42/checkpoints/final.pt" ;;
+  # init-rule robustness control: identical to lad*, but initialised from the
+  # best-val pretraining checkpoint. At small scales final.pt is overfit
+  # in-domain while best_val is not, so the final-init ladder could steepen
+  # the transfer trend; this arm measures that.
+  bv1k|bv10k|bv50k|bv100k|bv200k|bv400k|bv800k)
+    INIT="runs/v2_${COND#bv}_5p_ll_seed42/checkpoints/best_val_ll.pt" ;;
   *) echo "unknown COND=$COND" >&2; exit 1 ;;
 esac
 if [ -n "$INIT" ]; then test -f "$INIT" || { echo "missing init: $INIT" >&2; exit 4; }; fi

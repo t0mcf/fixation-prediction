@@ -362,6 +362,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--num-workers", type=int, default=4)
     parser.add_argument("--seed", type=int, default=None)
+    parser.add_argument("--image-list", default=None,
+                        help="protocol split file (class/file.JPEG per line); replaces "
+                             "the canonical validation split (default mode only). "
+                             "TEST DAY ONLY for test_10k.")
     parser.add_argument("--eval-batches", type=int, default=-1,
                         help="number of batches to evaluate; -1 = full val set")
     parser.add_argument("--eval-resolution", type=int, default=DG3_RESOLUTION,
@@ -489,7 +493,14 @@ def main() -> None:
                           parquet_path, imagenet_root, max_seq_len)
         return
 
-    # ---- default: our own seed-based 90/10 val split ----
+    # ---- default: canonical validation split, or an explicit image list ----
+    image_subset = None
+    if args.image_list:
+        from src.data.dataloader import image_subset_from_list
+        image_subset = image_subset_from_list(args.image_list, parquet_path)
+        print(f"evaluating on explicit image list: {args.image_list} "
+              f"({len(image_subset)} images; canonical val split bypassed)",
+              flush=True)
     val_loader = make_dataloader(
         split="val",
         batch_size=args.batch_size,
@@ -501,6 +512,7 @@ def main() -> None:
         max_seq_len=max_seq_len,
         parquet_path=parquet_path,
         imagenet_root=imagenet_root,
+        image_subset=image_subset,
     )
 
     print(f"\nval samples: {len(val_loader.dataset)}", flush=True)

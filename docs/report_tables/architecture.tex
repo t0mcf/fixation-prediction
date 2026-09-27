@@ -1,0 +1,57 @@
+\section{Our Model Architecture}
+\label{sec:architecture}
+
+\begin{figure}[t]
+    \centering
+    % \includegraphics[width=\linewidth]{figures/architecture}
+    \caption{Overview of the proposed architecture. A frozen DINOv2 encoder
+    provides image patch tokens, a causal transformer encodes the fixation
+    history, and stacked cross-attention layers condition each patch token on
+    that history before a convolutional decoder produces a heatmap over the
+    next fixation location.}
+    \label{fig:architecture}
+\end{figure}
+
+\subsection{Image Encoder}
+\label{sec:image-encoder}
+We use a DINOv2-Base model (ViT-B/14)~\cite{oquab2024dinov2, dosovitskiy2021vit}
+as the visual backbone, as its self-supervised features offer transferability
+across a wide range of vision tasks and domains~\cite{oquab2024dinov2}. The
+encoder remains frozen for the entire training, so its $85.8$M parameters do
+not receive gradient updates. Input images are resized to $224\times224$
+pixels and fed into the encoder, which produces $256$ patch tokens on a
+$16\times16$ grid, each of dimension $768$. These tokens are then projected by
+a trainable linear adapter to a model dimension of $d = 256$, followed by a
+LayerNorm.
+
+\subsection{Scanpath Encoder}
+\label{sec:scanpath-encoder}
+The scanpath encoder is a two-layer causal transformer that processes the
+sequence of previous fixation coordinates. Each $(x, y)$ coordinate pair is
+linearly projected to the model dimension $d$ and combined with a learned
+positional embedding. The causal mask ensures that the token at timestep $t$
+attends only to timesteps in $[0, t]$. The output is $T$ scanpath tokens of
+dimension $d$, one per fixation step.
+
+\subsection{Cross-Attention Fusion}
+\label{sec:fusion}
+To connect the two modalities of image content and fixation history,
+cross-attention is performed using the image tokens as queries and the
+scanpath tokens as keys and values. Four cross-attention layers are stacked,
+each using standard multi-head attention ($8$ heads, dropout $0.1$), followed
+by a residual feed-forward block (linear expansion to $4d$, GELU, dropout, and
+a linear projection back to $d$), with LayerNorm applied before each sub-block
+(pre-norm). As scanpaths vary in length, shorter sequences are padded and the
+padded positions are masked out during attention. After fusion, each image
+token is conditioned on the fixation history.
+
+\subsection{Heatmap Decoder}
+\label{sec:decoder}
+Finally, the scanpath-conditioned image tokens are used to produce a heatmap
+over the predicted next fixation location. The tokens are first reshaped to a
+$16\times16$ grid and upsampled to a final resolution of $64\times64$ in two
+successive stages. Each stage consists of a nearest-neighbour upsampling
+($\times2$) followed by a $3\times3$ convolution, GroupNorm, and a GELU
+activation. A $1\times1$ convolution reduces the output to a single channel
+while preserving the spatial structure, and a log-softmax yields the final
+log-probability distribution over the $64\times64 = 4096$ pixels.

@@ -30,6 +30,9 @@ case "$ARM" in
   sd5)     TP=$SDD/scandiffgen_official_v2_avcrop_100k_unfiltered/merged.parquet ;;
   avfull)  TP=$SDD/av_fixed5_full_v2u_100k/merged.parquet ;;
   avmatch) TP=$SDD/av_fixed5_match_v2u_100k/merged.parquet ;;
+  # placebo: real AV scanpaths reassigned to permuted images (derangement) —
+  # all scanpath statistics preserved, image-conditioning destroyed.
+  shuffled) TP=$SDD/av_fixed5_shuffled_v2u_100k/merged.parquet ;;
   *) echo "bad ARM=$ARM" >&2; exit 2 ;;
 esac
 test -f "$TP" || { echo "training parquet missing: $TP (build_av_fixed5_parquets.py first?)" >&2; exit 4; }

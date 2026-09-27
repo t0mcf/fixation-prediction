@@ -1,0 +1,81 @@
+device: cuda
+eval resolution: 224x224 (DG3 native = 224x224)
+LL unit: bits, uniform baseline = 0.0
+checkpoint: runs/scale_200k_5p_ll/checkpoints/best_val_nss.pt
+step: 93744  epoch: 11
+
+val samples: 80000
+starting evaluation...
+
+batch 0000 | valid=1920 | [ours] nss=3.5109 ll=3.0503 auc=0.9442 | [dg3] nss=11.4832 ll=3.0190 bits
+batch 0010 | valid=1920 | [ours] nss=4.1407 ll=3.2371 auc=0.9476 | [dg3] nss=17.2971 ll=3.2146 bits
+batch 0020 | valid=1920 | [ours] nss=4.1304 ll=3.1630 auc=0.9423 | [dg3] nss=17.9249 ll=3.1382 bits
+batch 0030 | valid=1920 | [ours] nss=3.8510 ll=2.9886 auc=0.9353 | [dg3] nss=15.7250 ll=2.9634 bits
+batch 0040 | valid=1920 | [ours] nss=3.7647 ll=2.9281 auc=0.9328 | [dg3] nss=14.9762 ll=2.9021 bits
+batch 0050 | valid=1920 | [ours] nss=3.7169 ll=2.8710 auc=0.9292 | [dg3] nss=14.8798 ll=2.8447 bits
+batch 0060 | valid=1920 | [ours] nss=3.8292 ll=2.9363 auc=0.9318 | [dg3] nss=16.0453 ll=2.9111 bits
+batch 0070 | valid=1920 | [ours] nss=3.9103 ll=2.9825 auc=0.9332 | [dg3] nss=16.8011 ll=2.9577 bits
+batch 0080 | valid=1920 | [ours] nss=3.7540 ll=2.8751 auc=0.9284 | [dg3] nss=15.6502 ll=2.8502 bits
+batch 0090 | valid=1920 | [ours] nss=3.8334 ll=2.9241 auc=0.9302 | [dg3] nss=16.4838 ll=2.8990 bits
+batch 0100 | valid=1920 | [ours] nss=3.8805 ll=2.9541 auc=0.9315 | [dg3] nss=16.7833 ll=2.9284 bits
+batch 0110 | valid=1920 | [ours] nss=3.9082 ll=2.9680 auc=0.9320 | [dg3] nss=16.9736 ll=2.9430 bits
+batch 0120 | valid=1920 | [ours] nss=3.9282 ll=2.9774 auc=0.9323 | [dg3] nss=17.1963 ll=2.9528 bits
+batch 0130 | valid=1920 | [ours] nss=3.9364 ll=2.9813 auc=0.9326 | [dg3] nss=17.2325 ll=2.9568 bits
+batch 0140 | valid=1920 | [ours] nss=3.9357 ll=2.9767 auc=0.9324 | [dg3] nss=17.2646 ll=2.9525 bits
+batch 0150 | valid=1920 | [ours] nss=3.9818 ll=2.9973 auc=0.9330 | [dg3] nss=17.6342 ll=2.9732 bits
+batch 0160 | valid=1920 | [ours] nss=3.9895 ll=2.9928 auc=0.9326 | [dg3] nss=17.7439 ll=2.9691 bits
+batch 0170 | valid=1920 | [ours] nss=4.0206 ll=3.0066 auc=0.9331 | [dg3] nss=18.0240 ll=2.9828 bits
+batch 0180 | valid=1920 | [ours] nss=4.0271 ll=3.0060 auc=0.9330 | [dg3] nss=18.1265 ll=2.9820 bits
+batch 0190 | valid=1920 | [ours] nss=4.0200 ll=3.0002 auc=0.9327 | [dg3] nss=18.0637 ll=2.9763 bits
+batch 0200 | valid=1920 | [ours] nss=4.0266 ll=3.0043 auc=0.9329 | [dg3] nss=18.1098 ll=2.9800 bits
+batch 0210 | valid=1920 | [ours] nss=3.9812 ll=2.9774 auc=0.9320 | [dg3] nss=17.7911 ll=2.9533 bits
+batch 0220 | valid=1920 | [ours] nss=3.9728 ll=2.9707 auc=0.9316 | [dg3] nss=17.7788 ll=2.9464 bits
+batch 0230 | valid=1920 | [ours] nss=3.9779 ll=2.9745 auc=0.9317 | [dg3] nss=17.7997 ll=2.9503 bits
+batch 0240 | valid=1920 | [ours] nss=4.0032 ll=2.9840 auc=0.9320 | [dg3] nss=18.0317 ll=2.9599 bits
+batch 0250 | valid=1920 | [ours] nss=3.9972 ll=2.9809 auc=0.9319 | [dg3] nss=17.9519 ll=2.9567 bits
+batch 0260 | valid=1920 | [ours] nss=3.9212 ll=2.9259 auc=0.9289 | [dg3] nss=17.4313 ll=2.9017 bits
+batch 0270 | valid=1920 | [ours] nss=3.8520 ll=2.8752 auc=0.9261 | [dg3] nss=16.9591 ll=2.8511 bits
+batch 0280 | valid=1920 | [ours] nss=3.7862 ll=2.8277 auc=0.9237 | [dg3] nss=16.5101 ll=2.8037 bits
+batch 0290 | valid=1920 | [ours] nss=3.7200 ll=2.7805 auc=0.9211 | [dg3] nss=16.0775 ll=2.7566 bits
+batch 0300 | valid=1920 | [ours] nss=3.6711 ll=2.7434 auc=0.9189 | [dg3] nss=15.7759 ll=2.7199 bits
+batch 0310 | valid=1920 | [ours] nss=3.6068 ll=2.6947 auc=0.9160 | [dg3] nss=15.3627 ll=2.6715 bits
+batch 0320 | valid=1920 | [ours] nss=3.5545 ll=2.6559 auc=0.9138 | [dg3] nss=15.0019 ll=2.6328 bits
+batch 0330 | valid=1920 | [ours] nss=3.5056 ll=2.6207 auc=0.9120 | [dg3] nss=14.6805 ll=2.5977 bits
+batch 0340 | valid=1920 | [ours] nss=3.4576 ll=2.5860 auc=0.9099 | [dg3] nss=14.3728 ll=2.5630 bits
+batch 0350 | valid=1920 | [ours] nss=3.4117 ll=2.5515 auc=0.9079 | [dg3] nss=14.0734 ll=2.5287 bits
+batch 0360 | valid=1920 | [ours] nss=3.3712 ll=2.5239 auc=0.9065 | [dg3] nss=13.7928 ll=2.5012 bits
+batch 0370 | valid=1920 | [ours] nss=3.3326 ll=2.4974 auc=0.9052 | [dg3] nss=13.5297 ll=2.4747 bits
+batch 0380 | valid=1920 | [ours] nss=3.3028 ll=2.4757 auc=0.9040 | [dg3] nss=13.3179 ll=2.4531 bits
+batch 0390 | valid=1920 | [ours] nss=3.2683 ll=2.4499 auc=0.9025 | [dg3] nss=13.0811 ll=2.4275 bits
+batch 0400 | valid=1920 | [ours] nss=3.2420 ll=2.4316 auc=0.9017 | [dg3] nss=12.8810 ll=2.4093 bits
+batch 0410 | valid=1920 | [ours] nss=3.2100 ll=2.4084 auc=0.9005 | [dg3] nss=12.6641 ll=2.3863 bits
+batch 0420 | valid=1920 | [ours] nss=3.1785 ll=2.3855 auc=0.8992 | [dg3] nss=12.4588 ll=2.3634 bits
+batch 0430 | valid=1920 | [ours] nss=3.1538 ll=2.3680 auc=0.8984 | [dg3] nss=12.2831 ll=2.3460 bits
+batch 0440 | valid=1920 | [ours] nss=3.1279 ll=2.3479 auc=0.8971 | [dg3] nss=12.1141 ll=2.3258 bits
+batch 0450 | valid=1920 | [ours] nss=3.1056 ll=2.3334 auc=0.8964 | [dg3] nss=11.9490 ll=2.3113 bits
+batch 0460 | valid=1920 | [ours] nss=3.0844 ll=2.3192 auc=0.8958 | [dg3] nss=11.7899 ll=2.2972 bits
+batch 0470 | valid=1920 | [ours] nss=3.0584 ll=2.3004 auc=0.8947 | [dg3] nss=11.6219 ll=2.2784 bits
+batch 0480 | valid=1920 | [ours] nss=3.0396 ll=2.2872 auc=0.8941 | [dg3] nss=11.4884 ll=2.2653 bits
+batch 0490 | valid=1920 | [ours] nss=3.0205 ll=2.2744 auc=0.8935 | [dg3] nss=11.3470 ll=2.2525 bits
+batch 0500 | valid=1920 | [ours] nss=2.9998 ll=2.2590 auc=0.8925 | [dg3] nss=11.2167 ll=2.2373 bits
+batch 0510 | valid=1920 | [ours] nss=2.9859 ll=2.2496 auc=0.8921 | [dg3] nss=11.1131 ll=2.2279 bits
+batch 0520 | valid=1920 | [ours] nss=2.9645 ll=2.2334 auc=0.8912 | [dg3] nss=10.9760 ll=2.2117 bits
+batch 0530 | valid=1920 | [ours] nss=2.9521 ll=2.2235 auc=0.8907 | [dg3] nss=10.8858 ll=2.2019 bits
+batch 0540 | valid=1920 | [ours] nss=2.9320 ll=2.2095 auc=0.8898 | [dg3] nss=10.7547 ll=2.1880 bits
+batch 0550 | valid=1920 | [ours] nss=2.9108 ll=2.1937 auc=0.8889 | [dg3] nss=10.6241 ll=2.1722 bits
+batch 0560 | valid=1920 | [ours] nss=2.8971 ll=2.1833 auc=0.8883 | [dg3] nss=10.5275 ll=2.1617 bits
+batch 0570 | valid=1920 | [ours] nss=2.8786 ll=2.1685 auc=0.8872 | [dg3] nss=10.4136 ll=2.1469 bits
+batch 0580 | valid=1920 | [ours] nss=2.8614 ll=2.1556 auc=0.8865 | [dg3] nss=10.2966 ll=2.1339 bits
+batch 0590 | valid=1920 | [ours] nss=2.8451 ll=2.1436 auc=0.8858 | [dg3] nss=10.1895 ll=2.1218 bits
+batch 0600 | valid=1920 | [ours] nss=2.8276 ll=2.1313 auc=0.8851 | [dg3] nss=10.0770 ll=2.1096 bits
+batch 0610 | valid=1920 | [ours] nss=2.8169 ll=2.1227 auc=0.8846 | [dg3] nss=10.0193 ll=2.1010 bits
+batch 0620 | valid=1920 | [ours] nss=2.8086 ll=2.1180 auc=0.8845 | [dg3] nss=9.9456 ll=2.0963 bits
+
+==================================================
+DG3-compatible evaluation results
+==================================================
+valid steps : 1200000
+LL (bits)   : 2.0955  [uniform=0, higher=better]
+NSS         : 9.9322
+AUC         : 0.8826
+==================================================

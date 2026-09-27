@@ -1,0 +1,7 @@
+selection,metric,n_folds,source_mean,source_std,generated_mean,generated_std,diff,t,df,folds_source_wins
+final-epoch,nss,10,2.2368,0.0626,2.0783,0.0697,0.1585,28.059,9,10
+final-epoch,ll,10,1.7188,0.045,1.5537,0.0563,0.1651,25.567,9,10
+final-epoch,auc,10,0.8796,0.0025,0.8714,0.0032,0.0082,21.457,9,10
+best-val-nss,nss,10,2.3073,0.0574,2.1809,0.0563,0.1264,47.252,9,10
+best-val-nss,ll,10,1.8017,0.0383,1.7211,0.041,0.0807,30.746,9,10
+best-val-nss,auc,10,0.8839,0.0022,0.8791,0.0025,0.0049,25.009,9,10

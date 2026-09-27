@@ -54,6 +54,7 @@ from src.eval.fair_metrics import (
     resize_logdensity,
     FairMetricAccumulator,
 )
+from src.eval.frozen_results import validate_split_files, image_results, write_results
 
 
 # ---------------------------------------------------------------------------
@@ -104,9 +105,39 @@ def fold_splits(seed: int, n_folds: int, n_images: int = 1003):
         yield k, train, val
 
 
+def fixed_split(split_dir: Path, eval_split: str):
+    """Authors' fixed splits, mapped to dataset indices exactly like
+    train.py's --mit-split-dir (basename match against stimuli.hdf5,
+    fail-loud). Center bias is fit on train.txt; scoring runs on
+    validation.txt or test.txt. Yields a single pseudo-fold."""
+    validate_split_files(split_dir)
+    import h5py
+    from src.data.mit1003_dataset import MIT1003_ROOT
+    with h5py.File(MIT1003_ROOT / "stimuli.hdf5", "r") as f:
+        fnames = [fn.decode() if isinstance(fn, bytes) else fn
+                  for fn in f["filenames"][:]]
+    name_to_idx = {Path(fn).name.lower(): i for i, fn in enumerate(fnames)}
+
+    def load(fname):
+        wanted = [l.strip() for l in open(split_dir / fname) if l.strip()]
+        missing = [w for w in wanted if Path(w).name.lower() not in name_to_idx]
+        if missing:
+            raise SystemExit(f"{fname}: {len(missing)} images not found, "
+                             f"e.g. {missing[:3]}")
+        return sorted(name_to_idx[Path(w).name.lower()] for w in wanted)
+
+    train = load("train.txt")
+    evalset = load(f"{eval_split}.txt")
+    overlap = set(train) & set(evalset)
+    assert not overlap, f"train/{eval_split} overlap: {len(overlap)} images"
+    print(f"FIXED splits from {split_dir}: {len(train)} train (CB fit), "
+          f"{len(evalset)} {eval_split} (scored)", flush=True)
+    yield 0, train, evalset
+
+
 def train_fold_fixations(train_images: list[int]) -> np.ndarray:
     """All target fixation coords (normalised [-1,1]) for the given train images."""
-    ds = MIT1003Dataset(max_seq_len=16, min_fixations=3, image_indices=train_images)
+    ds = MIT1003Dataset(max_seq_len=16, min_fixations=1, image_indices=train_images)
     xy = []
     for i in range(len(ds)):
         s = ds[i]
@@ -122,7 +153,7 @@ def train_fold_fixations_by_image(train_images: list[int]) -> list[np.ndarray]:
     fixation excluded, untruncated by max_seq_len), grouped per image for
     image-wise CB tuning. Reads dataset records directly to skip image I/O.
     """
-    ds = MIT1003Dataset(max_seq_len=16, min_fixations=3, image_indices=train_images)
+    ds = MIT1003Dataset(max_seq_len=16, min_fixations=1, image_indices=train_images)
     by_img: dict[int, list[np.ndarray]] = {}
     for rec in ds._records:
         H, W = ds._img_shapes[rec["img_idx"]]
@@ -143,7 +174,7 @@ def score_fold(model, val_images, centerbias_by_res, resolutions, device,
                batch_size, num_workers):
     loader = make_mit1003_loader(
         batch_size=batch_size, num_workers=num_workers,
-        max_seq_len=16, min_fixations=3, image_indices=val_images, shuffle=False,
+        max_seq_len=16, min_fixations=1, image_indices=val_images, shuffle=False,
     )
     accs = {r: FairMetricAccumulator(grid=r, centerbias=centerbias_by_res[r])
             for r in resolutions}
@@ -193,6 +224,12 @@ def score_fold(model, val_images, centerbias_by_res, resolutions, device,
     out = {}
     for r in resolutions:
         res = accs[r].result()
+        expected_fixations = sum(min(rec["n_valid"], 15) for rec in loader.dataset._records)
+        if res.get("n_fixations") != expected_fixations:
+            raise RuntimeError("Incomplete fixation evaluation")
+        res["per_image"] = image_results(accs[r], per_img[r])
+        for row in res["per_image"]:
+            row["image"] = Path(loader.dataset._filenames[row["image_id"]]).name.lower()
         pi = list(per_img[r].values())
         if pi:
             tot_n = sum(e[2] for e in pi)
@@ -234,6 +271,14 @@ def main():
     ap.add_argument("--name", default="model")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--n-folds", type=int, default=10)
+    ap.add_argument("--mit-split-dir", type=str, default=None,
+                    help="dir with train/validation/test.txt image lists; "
+                         "replaces the CV fold loop with one run on the fixed "
+                         "split. finetuned mode then takes --checkpoint "
+                         "directly (a single fine-tuned checkpoint).")
+    ap.add_argument("--eval-split", choices=["validation", "test"],
+                    default="validation",
+                    help="which fixed-split file to score (test: test day only)")
     ap.add_argument("--resolutions", type=int, nargs="+", default=[64, 128, 224])
     ap.add_argument("--cb-smooth-frac", type=float, default=0.05)
     ap.add_argument("--cb-mode", choices=["legacy", "tuned"], default="tuned",
@@ -242,19 +287,27 @@ def main():
                          "eps mixture, DG3-parity (default).")
     ap.add_argument("--batch-size", type=int, default=32)
     ap.add_argument("--num-workers", type=int, default=8)
+    ap.add_argument("--output-json", help="Exclusive full-precision fixed-split output, including per-image metrics")
     args = ap.parse_args()
+    if args.output_json and Path(args.output_json).exists():
+        ap.error("output JSON already exists")
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"device: {device}  mode: {args.mode}  resolutions: {args.resolutions}", flush=True)
 
     zeroshot_model = None
-    if args.mode == "zeroshot":
+    if args.mode == "zeroshot" or (args.mit_split_dir and args.checkpoint):
         assert args.checkpoint, "--checkpoint required for zeroshot"
         ckpt = torch.load(args.checkpoint, map_location=device)
         zeroshot_model = build_model(ckpt, device)
 
+    if args.mit_split_dir:
+        splits = fixed_split(Path(args.mit_split_dir), args.eval_split)
+    else:
+        splits = fold_splits(args.seed, args.n_folds)
+
     fold_results = []
-    for k, train_images, val_images in fold_splits(args.seed, args.n_folds):
+    for k, train_images, val_images in splits:
         # center bias fit on this fold's TRAIN images, at each resolution
         if args.cb_mode == "tuned":
             cb_per_img = train_fold_fixations_by_image(train_images)
@@ -266,7 +319,7 @@ def main():
             cb_by_res = {r: fit_centerbias(cb_xy, r, args.cb_smooth_frac, device)
                          for r in args.resolutions}
 
-        if args.mode == "zeroshot":
+        if zeroshot_model is not None:
             model = zeroshot_model
         else:
             ckpt_path = Path(args.run_dir) / f"fold{k}" / "checkpoints" / args.ckpt_name
@@ -283,13 +336,15 @@ def main():
               f"IG_cb@{r0}={res[r0]['ig_centerbias_img']:.3f} "
               f"(n_fix={res[r0]['n_fixations']})", flush=True)
 
-        if args.mode == "finetuned":
+        if args.mode == "finetuned" and zeroshot_model is None:
             del model
             torch.cuda.empty_cache()
 
     if not fold_results:
-        print("no folds scored (missing checkpoints?)")
-        return
+        raise RuntimeError("no folds scored")
+
+    if args.output_json:
+        write_results(args.output_json, args, fold_results)
 
     agg = aggregate(fold_results, args.resolutions)
     print(f"\n=== {args.name}  ({len(fold_results)} folds) ===")

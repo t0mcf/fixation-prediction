@@ -1,0 +1,2 @@
+split,grid,cb_mode,n_images,n_fixations,cb_ll_uniform_img,cb_ll_uniform_fix,cb_nss_img,cb_nss_fix,cb_auc_img,cb_auc_fix
+validation,224,tuned (train.txt fixations),150,15728,0.9769,0.9634,1.3127,1.2913,0.8121,0.8103

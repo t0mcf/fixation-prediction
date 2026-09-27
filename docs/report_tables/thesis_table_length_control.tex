@@ -1,0 +1,26 @@
+% Scanpath-length statistics on the MIT1003 cross-family test axis (2026-09-22).
+% Source: docs/report_tables/length_control_test.csv (scripts/make_length_control_table.py).
+\begin{table}[t]
+  \centering
+  \small
+  \begin{tabular}{lllrrr}
+    \toprule
+    Model & Human data & Pretraining & Mean length & SD & Length diff.\ to reference \\
+    \midrule
+    Human reference & -- & -- & 7.96 & 2.32 & 2.39 \\
+    Our model & MIT1003 only & scratch & 7.93 & 2.31 & 2.22 \\
+    Our model & MIT1003 only & AV 800k & 7.93 & 2.31 & 2.22 \\
+    DeepGaze III & MIT1003 only & scratch & 7.96 & 2.32 & 2.23 \\
+    DeepGaze III & MIT1003 only & AV 200k & 7.96 & 2.32 & 2.23 \\
+    ScanDiff & MIT1003 only & scratch & 7.95 & 2.44 & 2.52 \\
+    ScanDiff & MIT1003 only & AV 1k & 8.05 & 2.15 & 2.34 \\
+    ScanDiff & MIT1003 only & AV 100k & 8.07 & 1.99 & 2.32 \\
+    ScanDiff & MIT1003 only & AV 200k & 7.68 & 1.88 & 2.31 \\
+    ScanDiff & MIT1003 + COCO-FreeView & scratch & 7.53 & 2.24 & 2.47 \\
+    ScanDiff & MIT1003 + COCO-FreeView & AV 1k & 7.51 & 2.12 & 2.43 \\
+    ScanDiff & released checkpoint & -- & 8.47 & 2.43 & 2.59 \\
+    \bottomrule
+  \end{tabular}
+  \caption{Scanpath lengths on the MIT1003 test set (number of fixations including the initial fixation). Our model and DeepGaze~III generate every scanpath with the length of one reference scanpath of the image; ScanDiff predicts its own length. The last column is the mean absolute length difference over all generated-vs-reference pairs of an image, the pairs that enter MultiMatch and ScanMatch; for the human reference it is taken over all reference-vs-reference pairs, which form the comparison distribution of the KLD. One training run and one sampling draw per row (the validation-selected checkpoint, seed 42 for our model, repetition 0 for DeepGaze~III, seed 0 for ScanDiff).}
+  \label{tab:length-statistics}
+\end{table}

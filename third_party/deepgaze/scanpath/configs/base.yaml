@@ -1,0 +1,57 @@
+# scanpath/configs/base.yaml
+# Shared defaults for all DeepGaze III training modes.
+# Task-specific yamls reference this via default_args and override what they need.
+
+training:
+  mode: ~                        # required: imagenet | salicon | mit1003
+  out_dir: runs                          # relative to repo root; override in task config
+  max_epochs_pretraining: ~              # max epochs for SALICON pretraining (null = no limit)
+  batch_size: 4
+  num_workers: 4
+  train_frac: 0.9                # only used in imagenet mode
+  seed: 3141
+  use_lmdb: false                # true = LMDB cache on disk; false = in-memory preload
+  lmdb_base_dir: ~               # override LMDB location (e.g. /scratch/...); defaults to out_dir
+                                 # NOTE: if LMDB is re-enabled for multi-worker use, reopen
+                                 # the env per-worker (worker_init_fn) — do NOT inherit from main process
+  mixed_precision: false         # true = bf16 autocast (A100); no GradScaler needed (bf16 has fp32 exponent range)
+
+  optimizer:
+    lr: 0.001
+
+  stage1:                        # spatial saliency model
+    lr: ~                          # null = fall back to optimizer.lr
+    lr_milestones: [10, 20, 30, 40, 50, 60, 70, 80]
+    downsample: 2
+    readout_factor: 4
+    saliency_map_factor: 4
+
+  stage2:                        # full scanpath model (init from stage1)
+    lr: ~                          # null = fall back to optimizer.lr
+    lr_milestones: [10, 20, 30, 40, 50, 60, 70, 80]
+    downsample: 2
+    readout_factor: 4
+    saliency_map_factor: 4
+
+  centerbias:
+    use_centerbias: false          # false = flat zero (synthetic data); true = fitted KDE
+    bandwidth: ~                   # KDE bandwidth (required when use_centerbias: true)
+    eps: ~                         # KDE epsilon   (required when use_centerbias: true)
+    crossvalidated: false          # true = CrossvalidatedBaselineModel (MIT1003)
+
+model:
+  device: cuda
+  backbone: densenet    # densenet | dinov2 (backbone-swap ablation; dinov2 = frozen ViT-B/14, 768ch)
+  densenet_layers:
+    - "1.features.denseblock4.denselayer32.norm1"
+    - "1.features.denseblock4.denselayer32.conv1"
+    - "1.features.denseblock4.denselayer31.conv2"
+
+utils:
+  use_wandb: true
+  wandb_project: scanpather
+  wandb_dir: /user/henrich1/u14518/.project/dir.project/jonathan/wandb_runs
+  # Optional run name for wandb. Leave empty (~) to auto-generate a
+  # datetime+hash name (e.g. 2026_03_03_14_32_11_a3f8c21b). Set a string
+  # to use it verbatim (e.g. run_name: salicon_baseline).
+  run_name: ~

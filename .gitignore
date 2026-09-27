@@ -2,6 +2,10 @@ data/*.parquet
 logs/
 runs/
 wandb/
+# runs/ and wandb/ are symlinks into project storage; a trailing slash does
+# not match a symlink, so they need their own entries
+runs
+wandb
 *.out
 *.err
 __pycache__/
@@ -21,5 +25,11 @@ docs/*.pptx
 # belong in docs/meeting_plots/ instead, together with the script that makes them.
 docs/geom_crop_vs_resize.png
 docs/hat_alignment_check.png
-runs
-wandb
+
+# Local editor and agent state
+.vscode/
+.claude/
+CLAUDE.md
+CLEANUP_STAGING.md
+docs/codex_*.md
+*.bak_*

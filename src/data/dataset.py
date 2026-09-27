@@ -82,6 +82,7 @@ class ScanpathDataset(Dataset):
         max_paths_per_image: int = None,
         image_subset=None,
         epoch_subset=None,
+        hflip_double: bool = False,
     ):
         """
         Canonical val split: 5000 images selected by seed=3141, matching DG3's
@@ -105,6 +106,7 @@ class ScanpathDataset(Dataset):
         """
         assert split in ("train", "val")
         self.split = split
+        self.hflip_double = hflip_double
         self.max_seq_len = max_seq_len
         self.imagenet_root = imagenet_root
 
@@ -159,9 +161,17 @@ class ScanpathDataset(Dataset):
             )
 
     def __len__(self) -> int:
-        return len(self.df)
+        # hflip_double: indices [N, 2N) are the horizontally mirrored copies
+        # of [0, N) — image flipped along width, fixation x negated. The
+        # dataset's logical size doubles so a fixed-epoch schedule takes
+        # steps proportional to the effective (doubled) data, matching how a
+        # genuinely larger corpus would be trained under the ladder protocol.
+        return len(self.df) * 2 if self.hflip_double else len(self.df)
 
     def __getitem__(self, idx: int):
+        flip = self.hflip_double and idx >= len(self.df)
+        if flip:
+            idx -= len(self.df)
         row = self.df.iloc[idx]
         fixations = row["locations"].reshape(-1, 2)  # (N, 2)
 
@@ -176,6 +186,9 @@ class ScanpathDataset(Dataset):
 
         rel_path = row["image_path"].replace("./data/ImageNet", self.imagenet_root)
         img_tensor = _load_image_cached(rel_path)
+        if flip:
+            img_tensor = torch.flip(img_tensor, dims=[-1])
+            fixation_tensor[:, 0] = -fixation_tensor[:, 0]
 
         return {
             "image": img_tensor,           # (3, 224, 224)

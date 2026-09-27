@@ -1,0 +1,13 @@
+family,human_data,arm,label,mean_len,std_len,mean_abs_len_diff_to_ref,n_paths
+Human reference,--,--,mit1003_human_initial_test,7.96,2.32,2.39,2239
+Our model,MIT1003 only,scratch,ours_ft_scratch_seed42_T1,7.93,2.31,2.22,2167
+Our model,MIT1003 only,AV 800k,ours_ft_bv800k_seed42_T1,7.93,2.31,2.22,2167
+DeepGaze III,MIT1003 only,scratch,dg3_ft_scratch_rep0_T1,7.96,2.32,2.23,2239
+DeepGaze III,MIT1003 only,AV 200k,dg3_ft_full200k_rep0_T1,7.96,2.32,2.23,2239
+ScanDiff,MIT1003 only,scratch,scandiff_ft_ft_mit_scratch_seed0_epoch_170,7.95,2.44,2.52,2248
+ScanDiff,MIT1003 only,AV 1k,scandiff_ft_ft_mit_av1k_seed0_bvinit_epoch_170,8.05,2.15,2.34,2248
+ScanDiff,MIT1003 only,AV 100k,scandiff_ft_ft_mit_av100k_seed0_bvinit_last,8.07,1.99,2.32,2262
+ScanDiff,MIT1003 only,AV 200k,scandiff_ft_ft_mit_av200k_seed0_bvinit_last,7.68,1.88,2.31,2265
+ScanDiff,MIT1003 + COCO-FreeView,scratch,scandiff_ft_r1_official_recipe_seed0_epoch_170,7.53,2.24,2.47,2263
+ScanDiff,MIT1003 + COCO-FreeView,AV 1k,scandiff_ft_armB_joint_av1k_seed0_bvinit_epoch_170,7.51,2.12,2.43,2256
+ScanDiff,released checkpoint,--,scandiff_released_freeview,8.47,2.43,2.59,2261

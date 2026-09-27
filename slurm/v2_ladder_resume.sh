@@ -32,7 +32,10 @@ set -eo pipefail
 
 REPO=${REPO:-$HOME/repos/fixation-prediction}
 V2=/mnt/vast-nhr/projects/nim00018/tom/thesis_protocol/v2/splits/imagenet_av
-RUN="runs/v2_${SIZE}_5p_ll_seed${SEED}"
+: "${HFLIP:=0}"
+AUG=""; AUG_ARG=""
+if [ "$HFLIP" = "1" ]; then AUG="_hflip"; AUG_ARG="--hflip-double"; fi
+RUN="runs/v2_${SIZE}${AUG}_5p_ll_seed${SEED}"
 CKPT="$RUN/checkpoints/latest.pt"
 
 cd "$REPO"
@@ -54,7 +57,7 @@ python -m src.training.train \
   --imagenet-root /mnt/vast-nhr/projects/nim00018/datasets/ImageNet \
   --output-dir "$RUN" \
   --resume "$CKPT" \
-  --train-image-list "$V2/train_${SIZE}.txt" \
+  --train-image-list "$V2/train_${SIZE}.txt" $AUG_ARG \
   --train-scanpath-ids 0 1 2 3 4 \
   --paths-per-image 5 \
   --num-epochs 18 \
@@ -69,6 +72,6 @@ python -m src.training.train \
   --log-every 200 --val-batches -1 \
   --use-wandb --wandb-project fixation-prediction \
   --wandb-entity fischer-tom-university-of-goettingen \
-  --wandb-name "v2_${SIZE}_5p_ll_seed${SEED}"
+  --wandb-name "v2_${SIZE}${AUG}_5p_ll_seed${SEED}"
 
 echo "end=$(date)"

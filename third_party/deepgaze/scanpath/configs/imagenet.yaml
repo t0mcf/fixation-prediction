@@ -1,0 +1,56 @@
+# scanpath/configs/imagenet.yaml
+# Two-stage DeepGaze III training on synthetic RL-agent scanpaths (ImageNet).
+default_args:
+  - base.yaml
+
+training:
+  mode: imagenet
+  out_dir: runs/imagenet_paths
+
+  parquet_path: "imagenet_subset/2026_03_03_20_41_11_268d00ae/scanpaths/merged.parquet"
+  image_base_dir: "/mnt/vast-nhr/projects/nim00018/datasets/ImageNet/train_images"
+  image_size: 224
+
+  train_n_images: 1000  # max training images (null = all non-val images)
+  train_n_scanpaths: 15  # scanpaths per training image (null = all available)
+
+  # Fixed validation set — selected before the training split so the same
+  # val images are used regardless of train_n_images (enabling fair comparisons
+  # across scaling-law runs).  null falls back to the legacy train_frac split.
+  val_n_images: 5000         # number of val images  (null = use train_frac instead)
+  val_n_scanpaths: 10    # scanpaths per val image (null = use all available subjects)
+
+  batch_size: 64
+  num_workers: 8
+  # true  = pre-load all images into RAM (fast, but ~30 GB for 50k images).
+  # false = read from disk each batch via DataLoader workers (low RAM, use more workers).
+  in_memory: true
+
+  centerbias:
+    use_centerbias: false          # synthetic data — flat zero centerbias
+
+  stage1:
+    max_epochs: 30
+    lr: 0.001
+    lr_milestones: [20, 25]
+    downsample: 1
+    readout_factor: 2.25
+    saliency_map_factor: 1
+    nr_of_images_seen: ~         # overrides max_epochs if set
+    path: ~                      # null = <out_dir>/<run_name>/spatial/
+    use_pretrained: false        # skip if path/final.pth exists
+
+  stage2:
+    max_epochs: 10
+    lr: 0.001
+    lr_milestones: [5, 8]
+    downsample: 1
+    readout_factor: 2.25
+    saliency_map_factor: 1
+    nr_of_images_seen: ~         # overrides max_epochs if set
+    path: ~                      # null = <out_dir>/<run_name>/scanpath/
+    use_pretrained: false        # skip if path/final.pth exists
+
+utils:
+  use_wandb: false
+  wandb_project: imagenet_scanpather

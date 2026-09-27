@@ -38,6 +38,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--num-workers", type=int, default=4)
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--eval-batches", type=int, default=100)
+    parser.add_argument("--image-list", default=None,
+                        help="protocol split file (class/file.JPEG per line), e.g. "
+                             "thesis_protocol/v2/splits/imagenet_av/test_10k.txt; "
+                             "replaces the canonical validation split. TEST DAY ONLY "
+                             "for test_10k.")
 
     parser.add_argument("--heatmap-size", type=int, default=None)
     parser.add_argument("--heatmap-sigma", type=float, default=None)
@@ -196,6 +201,14 @@ def main() -> None:
 
     model = build_model_from_checkpoint(checkpoint, device)
 
+    image_subset = None
+    if args.image_list:
+        from src.data.dataloader import image_subset_from_list
+        image_subset = image_subset_from_list(args.image_list, eval_parquet_path)
+        print(f"evaluating on explicit image list: {args.image_list} "
+              f"({len(image_subset)} images; canonical val split bypassed)",
+              flush=True)
+
     val_loader = make_dataloader(
         split="val",
         batch_size=args.batch_size,
@@ -206,6 +219,7 @@ def main() -> None:
         max_seq_len=eval_max_seq_len,
         parquet_path=eval_parquet_path,
         imagenet_root=eval_imagenet_root,
+        image_subset=image_subset,
     )
 
     print("starting checkpoint evaluation...", flush=True)

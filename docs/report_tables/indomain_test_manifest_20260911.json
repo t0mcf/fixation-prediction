@@ -1,0 +1,272 @@
+{
+  "schema": "frozen_indomain_v1",
+  "records": [
+    {
+      "id": "ours_1k_seed42",
+      "family": "ours",
+      "checkpoint": "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_1k_5p_ll_seed42/checkpoints/best_val_ll.pt",
+      "checkpoint_sha256": "68eddc5a50ea6ab36d6cfed42617d3c4ccafeb9afb5e59afc98029bc9cd88522",
+      "selection": {
+        "epoch": 4.0,
+        "step": 156,
+        "ll": 1.579540214586258
+      }
+    },
+    {
+      "id": "ours_10k_seed42",
+      "family": "ours",
+      "checkpoint": "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_10k_5p_ll_seed42/checkpoints/best_val_ll.pt",
+      "checkpoint_sha256": "eaf7b6aebf9fa502aead78047c4bf58527edd77b9699aeb117674d353ee099ed",
+      "selection": {
+        "epoch": 5.0,
+        "step": 1950,
+        "ll": 2.107994671535492
+      }
+    },
+    {
+      "id": "ours_50k_seed42",
+      "family": "ours",
+      "checkpoint": "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_50k_5p_ll_seed42/checkpoints/best_val_ll.pt",
+      "checkpoint_sha256": "28cd8eaf5a5de0b59de385c67ded4fe8d1b95d73606fb4cdbf12780bc1b61ace",
+      "selection": {
+        "epoch": 6.0,
+        "step": 11718,
+        "ll": 2.318098710823059
+      }
+    },
+    {
+      "id": "ours_100k_seed42",
+      "family": "ours",
+      "checkpoint": "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_100k_5p_ll_seed42/checkpoints/best_val_ll.pt",
+      "checkpoint_sha256": "34acc839f6ab82ebe0442ecccce46d6cd39bbac2de824c673dca062e342d67b2",
+      "selection": {
+        "epoch": 7.0,
+        "step": 27342,
+        "ll": 2.390367028236389
+      }
+    },
+    {
+      "id": "ours_200k_seed42",
+      "family": "ours",
+      "checkpoint": "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_200k_5p_ll_seed42/checkpoints/best_val_ll.pt",
+      "checkpoint_sha256": "d5c8923b943b18747cb69b34249239e56d105501342305bc77773bb75521b35b",
+      "selection": {
+        "epoch": 8.0,
+        "step": 62496,
+        "ll": 2.459256609916687
+      }
+    },
+    {
+      "id": "ours_400k_seed42",
+      "family": "ours",
+      "checkpoint": "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_400k_5p_ll_seed42/checkpoints/best_val_ll.pt",
+      "checkpoint_sha256": "6b95098583d170fab840451c45d0e1b981f819a7628ff3bb8e3bca8ec0a12855",
+      "selection": {
+        "epoch": 13.0,
+        "step": 203125,
+        "ll": 2.5336652584075927
+      }
+    },
+    {
+      "id": "ours_800k_seed42",
+      "family": "ours",
+      "checkpoint": "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_800k_5p_ll_seed42/checkpoints/best_val_ll.pt",
+      "checkpoint_sha256": "a24def286ad7b12ecf14bd6f9207d55a8fa78703ffec5b3eded204aaa86a80ad",
+      "selection": {
+        "epoch": 17.0,
+        "step": 531250,
+        "ll": 2.6037952032089233
+      }
+    },
+    {
+      "id": "ours_1k_seed43",
+      "family": "ours",
+      "checkpoint": "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_1k_5p_ll_seed43/checkpoints/best_val_ll.pt",
+      "checkpoint_sha256": "011a339136e7a0fe7f62b5f9f5765ef774511f5bd27fdc79ac49acf98c5048d9",
+      "selection": {
+        "epoch": 4.0,
+        "step": 156,
+        "ll": 1.5725785409927369
+      }
+    },
+    {
+      "id": "ours_10k_seed43",
+      "family": "ours",
+      "checkpoint": "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_10k_5p_ll_seed43/checkpoints/best_val_ll.pt",
+      "checkpoint_sha256": "443d305c0fbde9104b3f770b8e9f68fffe8892e98046f75bea1476debd7e9b4a",
+      "selection": {
+        "epoch": 7.0,
+        "step": 2730,
+        "ll": 2.08690693025589
+      }
+    },
+    {
+      "id": "ours_50k_seed43",
+      "family": "ours",
+      "checkpoint": "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_50k_5p_ll_seed43/checkpoints/best_val_ll.pt",
+      "checkpoint_sha256": "d2bdd0a9c717aa1c7b226dd90ebc837e3e0feade64a4d19da97de43f5ac7b116",
+      "selection": {
+        "epoch": 6.0,
+        "step": 11718,
+        "ll": 2.3185397647857666
+      }
+    },
+    {
+      "id": "ours_100k_seed43",
+      "family": "ours",
+      "checkpoint": "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_100k_5p_ll_seed43/checkpoints/best_val_ll.pt",
+      "checkpoint_sha256": "6bb5d5ff06c50c35b059e4a5b48c4dea5c3fd8499af8f883676ce30a879fc542",
+      "selection": {
+        "epoch": 8.0,
+        "step": 31248,
+        "ll": 2.384364097213745
+      }
+    },
+    {
+      "id": "ours_200k_seed43",
+      "family": "ours",
+      "checkpoint": "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_200k_5p_ll_seed43/checkpoints/best_val_ll.pt",
+      "checkpoint_sha256": "fa120ab4ce6a1eb34159db6a1a1716203ac0d2b362d7081421b5e34e8143612c",
+      "selection": {
+        "epoch": 10.0,
+        "step": 78120,
+        "ll": 2.4567412700653075
+      }
+    },
+    {
+      "id": "ours_1k_seed44",
+      "family": "ours",
+      "checkpoint": "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_1k_5p_ll_seed44/checkpoints/best_val_ll.pt",
+      "checkpoint_sha256": "d6ec1c44a8e7fb36279b1dd13955cc17bfa4560447410c09af4c28c2e97e343c",
+      "selection": {
+        "epoch": 4.0,
+        "step": 156,
+        "ll": 1.5882962605476378
+      }
+    },
+    {
+      "id": "ours_10k_seed44",
+      "family": "ours",
+      "checkpoint": "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_10k_5p_ll_seed44/checkpoints/best_val_ll.pt",
+      "checkpoint_sha256": "0531f0881de4f054d83a2ec833fa28a93ced88e504ad017d58f41124b16675a5",
+      "selection": {
+        "epoch": 6.0,
+        "step": 2340,
+        "ll": 2.09699542427063
+      }
+    },
+    {
+      "id": "ours_50k_seed44",
+      "family": "ours",
+      "checkpoint": "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_50k_5p_ll_seed44/checkpoints/best_val_ll.pt",
+      "checkpoint_sha256": "28b233932ba18f1a2dbfaf7f965007e7bbd8537ae5f78a47adcd999770c2a3ed",
+      "selection": {
+        "epoch": 6.0,
+        "step": 11718,
+        "ll": 2.320477983093262
+      }
+    }
+  ],
+  "files": {
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/src/data/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/src/data/constants.py": "efea15b81bc004d9bbaf35ab51c2e5061532ec9964213cac2a08a247bbbef135",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/src/data/dataloader.py": "cbe57322ade551aa2a889198f6dc1fe91faa4ac7a4af94f60c5380962699039b",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/src/data/dataset.py": "61e6f4437f313c61329ab200fe97b4eb89e7640480b916b8370a3551bfbc2ed5",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/src/data/mit1003_dataset.py": "4a51a59f04aaa41c821c4ba3e92f1a52d3100dc8a7b3812ce9125e01570e7af6",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/src/eval/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/src/eval/fair_metrics.py": "7a4efe35e88e37913a2027f768f5014fcb84b531fbf36b0f7f082632ff5341b2",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/src/eval/frozen_results.py": "5beec0c36d48fc86951cb4519ad0cd28b1e54f132cedc638cbe80f7f44b004e2",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/src/models/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/src/models/dino_scanpather.py": "6ebc7bd9a69d4006ce3473413e4c66aa18d335a46013cd1aeed167abd16fbec6",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/src/training/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/src/training/losses.py": "8a5dd54bd89cbcbcde6671af08ca67739e1c83d688dca552ca302ed3d8f14696",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/src/training/metrics.py": "1560b27dfed4fb673b657e1888c6e9f8b4d6ffc98903df76ceb1f890e7b9ab8d",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/src/training/train.py": "455ec3bec8753be04b02277bb1bb423067a7d57034259eebdf204403e3983d81",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/scripts/eval_synthetic_fair.py": "08530983d83b0c4aa56876e6c86773b4749f88f31584dfe4a661192ee2dd6fac",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/scripts/evaluate_checkpoint.py": "a869135826873692f11a103f4a0769bcbbf4cdf290449dab44cad099aaf3681e",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/scripts/prepare_indomain_test.py": "c1269c8ca38e0b9684716fc6574b0656a66a074b66684b22585996d849b660ec",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/scripts/run_frozen_indomain.py": "0058bf6fc71c359759bb16f956a1639575368ca100a59d9d852877a0f88a122d",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/slurm/frozen_indomain.sbatch": "83efb3193d05c786b505ea0903d8d36e22eb92d88096e387e58d62a8acdb9d00",
+    "/mnt/vast-nhr/projects/nim00018/tom/thesis_protocol/v2/splits/imagenet_av/scanpath_ids_evaluation.txt": "19db51381e85a36e256e116b63fa48901a4277fd8e681840ed0ff6d1cdd5c0e3",
+    "/mnt/vast-nhr/projects/nim00018/tom/thesis_protocol/v2/splits/imagenet_av/scanpath_ids_train.txt": "026d8ad3dfa1f2aa9da7964947ddedd4e83c6fc008206ebf898699dea80f9804",
+    "/mnt/vast-nhr/projects/nim00018/tom/thesis_protocol/v2/splits/imagenet_av/test_10k.txt": "b459a95cf67b499f490e1af75f29a2c38930755fc82729dfd70746f12a5ef86a",
+    "/mnt/vast-nhr/projects/nim00018/tom/thesis_protocol/v2/splits/imagenet_av/train_100k.txt": "cfd60877b53e9408cfa66b870ee3563a5934a2b6b8d9f43b3ce7e217f073f48f",
+    "/mnt/vast-nhr/projects/nim00018/tom/thesis_protocol/v2/splits/imagenet_av/train_10k.txt": "0d9bd3494796d8f135bdff0a96556cb9664da30c5278488a2e8fac1f0452d2a2",
+    "/mnt/vast-nhr/projects/nim00018/tom/thesis_protocol/v2/splits/imagenet_av/train_1k.txt": "7c525a887fe4499750d2ba446f20347518005bc9966127d7b7f2b115f750ce9e",
+    "/mnt/vast-nhr/projects/nim00018/tom/thesis_protocol/v2/splits/imagenet_av/train_200k.txt": "9b5b6c020fbac07d998ce9302921bc4da04cc34489723e6b61af6b9659e4bfb5",
+    "/mnt/vast-nhr/projects/nim00018/tom/thesis_protocol/v2/splits/imagenet_av/train_400k.txt": "afb1c48d64f65249d3079a04c2676ca02a44f8e770dc828796711ffc92485339",
+    "/mnt/vast-nhr/projects/nim00018/tom/thesis_protocol/v2/splits/imagenet_av/train_50k.txt": "0b2599194bbab8d0fbb9f48a7c4f2cd772dfc4edd310eb04c74d03c411990feb",
+    "/mnt/vast-nhr/projects/nim00018/tom/thesis_protocol/v2/splits/imagenet_av/train_800k.txt": "5667bb3ea1833e3e7aa6471d9cdd2577263e5d524babc641d39965230172b8f1",
+    "/mnt/vast-nhr/projects/nim00018/tom/thesis_protocol/v2/splits/imagenet_av/train_pool_800k.txt": "5667bb3ea1833e3e7aa6471d9cdd2577263e5d524babc641d39965230172b8f1",
+    "/mnt/vast-nhr/projects/nim00018/tom/thesis_protocol/v2/splits/imagenet_av/unused_pool.txt": "5767742e78315d42f4c82d9db8543443d5984083821379125857815ce58a865b",
+    "/mnt/vast-nhr/projects/nim00018/tom/thesis_protocol/v2/splits/imagenet_av/validation_5k.txt": "f05c9e2ba469eaeb55ce6654ba62713f8ef94b8bb5922bde7327a4092b29d23d",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_1k_5p_ll_seed42/checkpoints/best_val_ll.pt": "68eddc5a50ea6ab36d6cfed42617d3c4ccafeb9afb5e59afc98029bc9cd88522",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_1k_5p_ll_seed42/config.json": "a60d005ddcc0071b2af1f48c722440e84e2036c01692527920c5b27515ccfeb1",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_1k_5p_ll_seed42/log.csv": "bd93de96a5a1705b4c8c9f2ad9a4c48c4fe3e45a45a4d9bf5d7369a033381d75",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_10k_5p_ll_seed42/checkpoints/best_val_ll.pt": "eaf7b6aebf9fa502aead78047c4bf58527edd77b9699aeb117674d353ee099ed",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_10k_5p_ll_seed42/config.json": "81c933f0a2a6774ba44a336782f9950eda5449cc0d70c530fcad76f86eaf48b5",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_10k_5p_ll_seed42/log.csv": "1e746ec11414351b2d8c0f81ae85737036e7d0c8834f5feb00da8c3019a774f3",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_50k_5p_ll_seed42/checkpoints/best_val_ll.pt": "28cd8eaf5a5de0b59de385c67ded4fe8d1b95d73606fb4cdbf12780bc1b61ace",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_50k_5p_ll_seed42/config.json": "f5787bc12d340ea32623b8bd8fccf34039580373efeb05e04dca1a97bf513654",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_50k_5p_ll_seed42/log.csv": "f6bb524c6797bfcde0f4bf2eab7e2faebb00a39cb9f2d9a4f99e2d7d775fdccd",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_100k_5p_ll_seed42/checkpoints/best_val_ll.pt": "34acc839f6ab82ebe0442ecccce46d6cd39bbac2de824c673dca062e342d67b2",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_100k_5p_ll_seed42/config.json": "24111ab77fd2586d7d4bda3f0f60e4430e2b6cac3005e10678f7cc595b59fb9a",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_100k_5p_ll_seed42/log.csv": "881db6c796e4a3dd6aa69439b82277fbdbd7d7caca68d6ff531f54f7144ffa4e",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_200k_5p_ll_seed42/checkpoints/best_val_ll.pt": "d5c8923b943b18747cb69b34249239e56d105501342305bc77773bb75521b35b",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_200k_5p_ll_seed42/config.json": "314db8a66a5bdd69a30d5ad09dcbeed7aded86496ff9002f5296dfb865bed25b",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_200k_5p_ll_seed42/log.csv": "c824369902f8c0dd8a53c6f986688f086f115a38e62f8c2ba62394288ed2c892",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_400k_5p_ll_seed42/checkpoints/best_val_ll.pt": "6b95098583d170fab840451c45d0e1b981f819a7628ff3bb8e3bca8ec0a12855",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_400k_5p_ll_seed42/config.json": "6c8a99efc0eb59c8a3f945d324a9657b7eb4b6b4bbc7542707cb204df9a7da9e",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_400k_5p_ll_seed42/log.csv": "acab94f0ef1b2663bde52b1910a96d68349611418e6a0a4552c31fc24e7e2f42",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_800k_5p_ll_seed42/checkpoints/best_val_ll.pt": "a24def286ad7b12ecf14bd6f9207d55a8fa78703ffec5b3eded204aaa86a80ad",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_800k_5p_ll_seed42/config.json": "8668a7a3acab60e2ebaa195352fd1d7c78b8df51414dda9c65a0748192897d32",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_800k_5p_ll_seed42/log.csv": "bf3d035c35b3042a3c56979b64ce0244fca7fc93b5ab82fa7b200a159da79d7f",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_1k_5p_ll_seed43/checkpoints/best_val_ll.pt": "011a339136e7a0fe7f62b5f9f5765ef774511f5bd27fdc79ac49acf98c5048d9",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_1k_5p_ll_seed43/config.json": "c8b12bbd52d32d68f03a4e65a9e6a5eda41f7014d7763b79344b55fe15136e7e",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_1k_5p_ll_seed43/log.csv": "cc86f2127adb4894c91a76fae826b0077b116d86dd317663a89b19fd271a0ac6",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_10k_5p_ll_seed43/checkpoints/best_val_ll.pt": "443d305c0fbde9104b3f770b8e9f68fffe8892e98046f75bea1476debd7e9b4a",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_10k_5p_ll_seed43/config.json": "1e4f4832bb93786ef6e618e2ddc7606809eb8a231594dabab2b849bf8a0eff15",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_10k_5p_ll_seed43/log.csv": "7735157cdeb4228689e8d80e9ec850c447eeb4a02b5d14fb03d790e88ac2833f",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_50k_5p_ll_seed43/checkpoints/best_val_ll.pt": "d2bdd0a9c717aa1c7b226dd90ebc837e3e0feade64a4d19da97de43f5ac7b116",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_50k_5p_ll_seed43/config.json": "f2e2011b8f4175379494eb1803f2d38c808faf0f8e1969a0c3ab2033d41008a0",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_50k_5p_ll_seed43/log.csv": "3655deab84cbce57d69dbf499573ac1725c64e7f5f24c5397e0f8bb25fe71ff9",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_100k_5p_ll_seed43/checkpoints/best_val_ll.pt": "6bb5d5ff06c50c35b059e4a5b48c4dea5c3fd8499af8f883676ce30a879fc542",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_100k_5p_ll_seed43/config.json": "05d46a13c5d11fc5f1c94f0276f1c5d9d1c041887ffb8acb96c62312c2542ada",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_100k_5p_ll_seed43/log.csv": "9fb9c2e16c60014776d6cb7f9eeec0e7bf7c0abc2ca3900da3423aa8db2f7069",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_200k_5p_ll_seed43/checkpoints/best_val_ll.pt": "fa120ab4ce6a1eb34159db6a1a1716203ac0d2b362d7081421b5e34e8143612c",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_200k_5p_ll_seed43/config.json": "043291b6dcb0a05094d737cadbd68fe8442062e66a514262b4363057a3f057a5",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_200k_5p_ll_seed43/log.csv": "16657f3659280acabba046b7ecc2f9129012f35668bdb7feff42e087783dcb28",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_1k_5p_ll_seed44/checkpoints/best_val_ll.pt": "d6ec1c44a8e7fb36279b1dd13955cc17bfa4560447410c09af4c28c2e97e343c",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_1k_5p_ll_seed44/config.json": "35367c7e9c111f602782dcb88849e0e2b4193c42361d29840031cc2a17dd9715",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_1k_5p_ll_seed44/log.csv": "a7dec3f2af4de61a2a6c898bee7306bed9023775772c620c4eff2790b48518d3",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_10k_5p_ll_seed44/checkpoints/best_val_ll.pt": "0531f0881de4f054d83a2ec833fa28a93ced88e504ad017d58f41124b16675a5",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_10k_5p_ll_seed44/config.json": "a80d59ee2c5ff474eb7e33916fcee4d99096c95e0ef994c2065f07542cc53eed",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_10k_5p_ll_seed44/log.csv": "7fff3bc2e847248c293205e9106b41ccb61a75e459a94f248be16fa1b88222c7",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_50k_5p_ll_seed44/checkpoints/best_val_ll.pt": "28b233932ba18f1a2dbfaf7f965007e7bbd8537ae5f78a47adcd999770c2a3ed",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_50k_5p_ll_seed44/config.json": "1ed2a11c36a0827f8a557abdbdc96afc15addd4277519e4147ad30cfb8e95c46",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/v2_50k_5p_ll_seed44/log.csv": "80a285a5c650c2f7a801902327e3bd84caa3373ddd56fbfc919a8b42004ac12a",
+    "/mnt/vast-nhr/projects/nim00018/datasets/scanpath_parquet/2026_03_03_20_41_11_268d00ae/scanpaths/merged.parquet": "d3437691c4090d7a3b15c7b01c45ad44d83b14ed7f17476e4265122c1f76a70d"
+  },
+  "parquet": "/mnt/vast-nhr/projects/nim00018/datasets/scanpath_parquet/2026_03_03_20_41_11_268d00ae/scanpaths/merged.parquet",
+  "images": "/mnt/vast-nhr/projects/nim00018/datasets/ImageNet",
+  "native_ll_tolerance": 0.005,
+  "tolerance_policy": "Conservative maximum: failure requires investigation, never automatic widening.",
+  "splits": {
+    "validation": {
+      "path": "/mnt/vast-nhr/projects/nim00018/tom/thesis_protocol/v2/splits/imagenet_av/validation_5k.txt",
+      "images": 5000
+    },
+    "test": {
+      "path": "/mnt/vast-nhr/projects/nim00018/tom/thesis_protocol/v2/splits/imagenet_av/test_10k.txt",
+      "images": 10000
+    }
+  },
+  "validation_outputs": "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/synthetic_fair/validation",
+  "test_outputs": "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/synthetic_fair/test",
+  "limitations": [
+    "Image-file contents are not hashed by this manifest.",
+    "Existing validation jobs do not carry source-code hashes; adoption is explicit.",
+    "DG3 excluded pending common target-coordinate review."
+  ]
+}

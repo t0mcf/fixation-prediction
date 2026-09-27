@@ -44,6 +44,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--heatmap-size", type=int, default=64)
     parser.add_argument("--heatmap-sigma", type=float, default=2.0)
     parser.add_argument("--decoder-hidden-channels", type=int, default=256)
+    parser.add_argument("--decoder-upsample", default="nearest",
+                        choices=["nearest", "bilinear", "transposed"],
+                        help="heatmap-decoder upsampling variant; lets this script "
+                             "report the decoder's share of the step for each option "
+                             "in the decoder ablation.")
     parser.add_argument("--paths-per-image", type=int, default=16,
                         help="grouped-sampler optimization: run encoder on B//P unique images")
     parser.add_argument("--loss", choices=["ll", "kl"], default="ll",
@@ -166,6 +171,7 @@ def main() -> None:
         heatmap_size=args.heatmap_size,
         dropout=0.0,
         decoder_hidden_channels=args.decoder_hidden_channels,
+        decoder_upsample=args.decoder_upsample,
         use_bidirectional_fusion=args.bidirectional_fusion,
         use_patch_pos_embed=args.patch_pos_embed,
     ).to(device)

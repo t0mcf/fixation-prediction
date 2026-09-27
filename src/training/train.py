@@ -61,6 +61,10 @@ def parse_args() -> argparse.Namespace:
              "order and therefore -- since the parquet is sorted by class -- "
              "gives degenerate class coverage at small scales.")
     parser.add_argument(
+        "--hflip-double", action="store_true",
+        help="double the training set with horizontally mirrored copies "
+             "(image flipped, fixation x negated); validation untouched")
+    parser.add_argument(
         "--train-scanpath-ids", type=int, nargs="+", default=None,
         help="keep only these scanpath (epoch) IDs for training, e.g. 0 1 2 3 4. "
              "Without this the sampler draws a fresh subset of the 16 available "
@@ -260,6 +264,7 @@ def save_checkpoint(
     scaler: torch.amp.GradScaler | None = None,
     best_val_kl: float | None = None,
     best_val_nss: float | None = None,
+    best_val_ll: float | None = None,
 ) -> None:
     ckpt: dict[str, Any] = {
         "model_state": model.state_dict(),
@@ -275,6 +280,11 @@ def save_checkpoint(
         ckpt["best_val_kl"] = best_val_kl
     if best_val_nss is not None:
         ckpt["best_val_nss"] = best_val_nss
+    if best_val_ll is not None:
+        # persisted since 2026-09-03: without it a resumed run restarted the
+        # best-LL tracker at -inf and its first validation overwrote
+        # best_val_ll.pt regardless of quality
+        ckpt["best_val_ll"] = best_val_ll
     torch.save(ckpt, path)
 
 
@@ -566,7 +576,7 @@ def run_validation(
         if not args.no_save_checkpoints:
             best_path = checkpoint_dir / "best_val_kl.pt"
             save_checkpoint(best_path, model, optimizer, scheduler, step, epoch, args,
-                            scaler, best_val_kl, best_val_nss)
+                            scaler, best_val_kl, best_val_nss, best_val_ll)
             print(f"saved new best val kl checkpoint (val_kl={best_val_kl:.4f})", flush=True)
 
     if metrics["val_nss"] > best_val_nss:
@@ -574,7 +584,7 @@ def run_validation(
         if not args.no_save_checkpoints:
             best_path = checkpoint_dir / "best_val_nss.pt"
             save_checkpoint(best_path, model, optimizer, scheduler, step, epoch, args,
-                            scaler, best_val_kl, best_val_nss)
+                            scaler, best_val_kl, best_val_nss, best_val_ll)
             print(f"saved new best val nss checkpoint (val_nss={best_val_nss:.4f})", flush=True)
 
     if metrics["val_ll"] > best_val_ll:
@@ -582,7 +592,7 @@ def run_validation(
         if not args.no_save_checkpoints:
             best_path = checkpoint_dir / "best_val_ll.pt"
             save_checkpoint(best_path, model, optimizer, scheduler, step, epoch, args,
-                            scaler, best_val_kl, best_val_nss)
+                            scaler, best_val_kl, best_val_nss, best_val_ll)
             print(f"saved new best val ll checkpoint (val_ll={best_val_ll:.4f})", flush=True)
 
     return best_val_kl, best_val_nss, best_val_ll
@@ -753,6 +763,7 @@ def main() -> None:
             image_subset=train_subset,
             epoch_subset=args.train_scanpath_ids,
             imagenet_root=args.imagenet_root,
+            hflip_double=args.hflip_double,
         )
 
         val_loader = make_dataloader(
@@ -904,7 +915,20 @@ def main() -> None:
         step = ckpt["step"]
         best_val_kl = ckpt.get("best_val_kl", float("inf"))
         best_val_nss = ckpt.get("best_val_nss", float("-inf"))
-        print(f"resumed from {args.resume} | start_epoch={start_epoch} | step={step}", flush=True)
+        if "best_val_ll" in ckpt:
+            best_val_ll = ckpt["best_val_ll"]
+        elif log_path.exists():
+            # checkpoints written before 2026-09-03 carry no best_val_ll;
+            # reconstruct it from the run's own validation log so the first
+            # validation after resuming cannot overwrite a better best_val_ll.pt
+            with log_path.open() as fh:
+                vals = [float(r["ll"]) for r in csv.DictReader(fh)
+                        if r.get("split") == "val" and r.get("ll") not in (None, "")]
+            if vals:
+                best_val_ll = max(vals)
+                print(f"best_val_ll reconstructed from log.csv: {best_val_ll:.4f}", flush=True)
+        print(f"resumed from {args.resume} | start_epoch={start_epoch} | step={step} | "
+              f"best_val_ll={best_val_ll:.4f}", flush=True)
 
     model.train()
     print("starting training...", flush=True)
@@ -1074,14 +1098,16 @@ def main() -> None:
             if not args.no_save_checkpoints:
                 latest_path = checkpoint_dir / "latest.pt"
                 save_checkpoint(latest_path, model, optimizer, scheduler,
-                                step, epoch, args, scaler, best_val_kl, best_val_nss)
+                                step, epoch, args, scaler, best_val_kl, best_val_nss,
+                                best_val_ll)
                 print(f"saved latest checkpoint: {latest_path}", flush=True)
 
         if not args.no_save_checkpoints:
             final_path = checkpoint_dir / "final.pt"
             final_epoch = epoch if "epoch" in locals() else start_epoch - 1
             save_checkpoint(final_path, model, optimizer, scheduler,
-                            step, final_epoch, args, scaler, best_val_kl, best_val_nss)
+                            step, final_epoch, args, scaler, best_val_kl, best_val_nss,
+                            best_val_ll)
             print(f"saved final checkpoint: {final_path}", flush=True)
         print(f"total steps: {step}", flush=True)
         print(f"best val kl: {best_val_kl:.4f}", flush=True)

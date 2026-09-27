@@ -1,0 +1,11 @@
+oursynth_v2_200k:
+  _target_: src.data.components.mit1003.mit1003.MIT1003Dataset
+  name: oursynth_v2_200k
+  root_path: ./data/thesis_v2/oursynth_v2_200k
+  task: What do you see in the image?
+  split: valid
+  num_subjects: 16
+  time_in_ms: false
+  use_abs_coords: true
+  task_embeddings_file: task_embeddings.npy
+  img_features_dir: dinov2_base_timm_image_features

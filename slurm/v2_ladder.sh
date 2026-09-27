@@ -43,7 +43,12 @@ case "$SIZE" in 1k|10k|50k|100k|200k|400k|800k) ;; *) echo "bad SIZE=$SIZE" >&2;
 
 REPO=${REPO:-$HOME/repos/fixation-prediction}
 V2=/mnt/vast-nhr/projects/nim00018/tom/thesis_protocol/v2/splits/imagenet_av
-RUN="runs/v2_${SIZE}_5p_ll_seed${SEED}"
+# HFLIP=1: deterministic horizontal-flip doubling (effective 2x images);
+# separate run name so the rung and its augmented twin coexist.
+: "${HFLIP:=0}"
+AUG=""; AUG_ARG=""
+if [ "$HFLIP" = "1" ]; then AUG="_hflip"; AUG_ARG="--hflip-double"; fi
+RUN="runs/v2_${SIZE}${AUG}_5p_ll_seed${SEED}"
 
 cd "$REPO"
 mkdir -p logs
@@ -70,7 +75,7 @@ python -m src.training.train \
   --imagenet-root /mnt/vast-nhr/projects/nim00018/datasets/ImageNet \
   --output-dir "$RUN" \
   --train-image-list "$V2/train_${SIZE}.txt" \
-  --train-scanpath-ids 0 1 2 3 4 \
+  --train-scanpath-ids 0 1 2 3 4 $AUG_ARG \
   --paths-per-image 5 \
   --num-epochs 18 \
   --batch-size 128 --num-workers 16 --seed "$SEED" \
@@ -84,6 +89,6 @@ python -m src.training.train \
   --log-every 200 --val-batches -1 \
   --use-wandb --wandb-project fixation-prediction \
   --wandb-entity fischer-tom-university-of-goettingen \
-  --wandb-name "v2_${SIZE}_5p_ll_seed${SEED}"
+  --wandb-name "v2_${SIZE}${AUG}_5p_ll_seed${SEED}"
 
 echo "end=$(date)"

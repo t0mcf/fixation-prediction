@@ -1,0 +1,4 @@
+key,model,dataset,metric,value,source,conditions
+dg35_mit_ig,DeepGaze3.5-VL (combined),MIT1003,ig_bits_per_fixation,2.18,"Agrawal, Bethge & Kümmerer, DeepGaze3.5-VL, Table 1 (docs/dg3.5.pdf)","authors' held-out split; IG over the dataset-level centre-bias prior; full-resolution evaluation; not our harness"
+dg35_mit_ig_iid,DeepGaze3.5-VL (MIT1003 only),MIT1003,ig_bits_per_fixation,2.03,"Agrawal, Bethge & Kümmerer, DeepGaze3.5-VL, Table 1 (docs/dg3.5.pdf)","authors' held-out split; IG over the dataset-level centre-bias prior; full-resolution evaluation; not our harness"
+dg3_6b_mit_ig,DeepGaze III (InternViT-6B backbone),MIT1003,ig_bits_per_fixation,1.49,"Agrawal, Bethge & Kümmerer, DeepGaze3.5-VL, Table 1 (docs/dg3.5.pdf)","authors' held-out split; IG over the dataset-level centre-bias prior; full-resolution evaluation; not our harness"

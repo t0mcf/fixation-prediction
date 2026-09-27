@@ -46,6 +46,7 @@ root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
 
 from src.data.dataloader import make_dataloader
+from src.data.constants import IMAGENET_MEAN, IMAGENET_STD
 from src.models.dino_scanpather import ScanpathModel
 
 
@@ -55,8 +56,8 @@ default_parquet_path = (
 )
 default_imagenet_root = "/mnt/vast-nhr/projects/nim00018/datasets/ImageNet"
 
-_IMAGENET_MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
-_IMAGENET_STD  = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+_IMAGENET_MEAN = np.array(IMAGENET_MEAN, dtype=np.float32)
+_IMAGENET_STD  = np.array(IMAGENET_STD,  dtype=np.float32)
 
 
 # ---------------------------------------------------------------------------
@@ -80,12 +81,19 @@ def compute_ll_per_step(
     log_pred_step: torch.Tensor,   # (H, W) log-softmax
     gt_xy: np.ndarray,             # (2,) normalised
 ) -> float:
+    """Log-likelihood in bits above the uniform baseline (matches training metric).
+
+    Formula: (log_p + log(H*W)) / log(2)
+    A uniform map gives 0.0; a model better than uniform gives a positive value.
+    """
+    import math
     H, W = log_pred_step.shape
     col = round((gt_xy[0] + 1.0) / 2.0 * (W - 1))
     row = round((gt_xy[1] + 1.0) / 2.0 * (H - 1))
     col = max(0, min(W - 1, col))
     row = max(0, min(H - 1, row))
-    return float(log_pred_step[row, col].item())
+    log_p = float(log_pred_step[row, col].item())
+    return (log_p + math.log(H * W)) / math.log(2)
 
 
 def build_model(checkpoint: dict[str, Any], device: str) -> ScanpathModel:
@@ -103,6 +111,8 @@ def build_model(checkpoint: dict[str, Any], device: str) -> ScanpathModel:
         dropout=a.get("dropout", 0.1),
         decoder_dropout=a.get("decoder_dropout", None),
         decoder_hidden_channels=a.get("decoder_hidden_channels", 256),
+        decoder_upsample=a.get("decoder_upsample", "nearest"),
+
         use_visual_scanpath_features=a.get("visual_scanpath_features", False),
         use_patch_pos_embed=a.get("patch_pos_embed", False),
         use_bidirectional_fusion=a.get("bidirectional_fusion", False),
@@ -223,51 +233,70 @@ def plot_multi_model(
     samples_per_model: list[list[dict]],   # [model_idx][sample_idx]
     model_names: list[str],
     output_dir: Path,
-    num_samples: int = 4,
-    steps_per_sample: int = 3,
+    num_samples: int = 16,
+    images_per_fig: int = 8,
 ) -> None:
     """
-    Rows = samples × steps, columns = models.
-    For each sample, pick `steps_per_sample` evenly spaced steps.
+    Grid comparison: rows = different images, columns = models.
+
+    Step fractions cycle across rows so different images are shown at
+    different amounts of scanpath history (early, mid, late, near-end).
+    Splits into multiple figures of `images_per_fig` rows each.
+    No per-panel metric annotation — the heatmaps speak for themselves.
+    A row label on the left shows how many fixations of context were given.
     """
+    # cycle through these fractions of the valid scanpath length
+    STEP_FRACS = [0.2, 0.45, 0.65, 0.85]
+
     output_dir.mkdir(parents=True, exist_ok=True)
     n_models = len(model_names)
-    chosen_idx = list(range(min(num_samples, len(samples_per_model[0]))))
+    n_total  = min(num_samples, len(samples_per_model[0]))
 
-    for s_idx in chosen_idx:
-        # pick steps from the first model's valid range (all models see same data)
-        fix_len = int(samples_per_model[0][s_idx]["fixations_len"])
-        n_valid = max(1, fix_len - 1)
-        step_candidates = list(range(n_valid))
-        # pick evenly spaced steps
-        idxs = np.linspace(0, len(step_candidates) - 1, steps_per_sample, dtype=int)
-        steps = [step_candidates[i] for i in idxs]
+    for fig_idx, start in enumerate(range(0, n_total, images_per_fig)):
+        chunk = list(range(start, min(start + images_per_fig, n_total)))
+        nrows, ncols = len(chunk), n_models
 
-        nrows = len(steps)
-        ncols = n_models
-        fig, axes = plt.subplots(nrows, ncols, figsize=(3.0 * ncols, 3.5 * nrows),
-                                 squeeze=False)
-        fig.suptitle(f"Multi-model comparison — sample {s_idx}", fontsize=9)
+        fig, axes = plt.subplots(
+            nrows, ncols,
+            figsize=(3.2 * ncols, 3.2 * nrows),
+            squeeze=False,
+        )
 
-        for row, t in enumerate(steps):
-            for col, (model_name, model_samples) in enumerate(
-                zip(model_names, samples_per_model)
-            ):
-                s = model_samples[s_idx]
-                img_np  = denorm_image(s["image"])
-                fix_np  = s["fixations"].cpu().numpy()
-                fix_len = int(s["fixations_len"])
-                ll_val  = compute_ll_per_step(s["log_preds"][t], fix_np[t + 1])
-                title   = model_name if row == 0 else None
+        # bold column headers on top row
+        for col, name in enumerate(model_names):
+            axes[0, col].set_title(name, fontsize=9, fontweight="bold", pad=4)
+
+        for row, s_idx in enumerate(chunk):
+            frac    = STEP_FRACS[s_idx % len(STEP_FRACS)]
+            fix_len = int(samples_per_model[0][s_idx]["fixations_len"])
+            n_valid = max(1, fix_len - 1)
+            t       = max(0, min(n_valid - 1, round(frac * (n_valid - 1))))
+
+            for col, model_samples in enumerate(samples_per_model):
+                s      = model_samples[s_idx]
+                img_np = denorm_image(s["image"])
+                fix_np = s["fixations"].cpu().numpy()
+
                 draw_panel(
                     axes[row, col], img_np, s["log_preds"][t],
                     fix_np, t, fix_len,
-                    ll_val=ll_val,
-                    title=title if row == 0 else f"t={t}\nLL={ll_val:.3f}",
+                    ll_val=None,
+                    title="",
                 )
+                # restore column header on top row (draw_panel overwrites it)
+                if row == 0:
+                    axes[row, col].set_title(
+                        model_names[col], fontsize=9, fontweight="bold", pad=4
+                    )
+
+            # row label: how many fixations of context were shown
+            axes[row, 0].set_ylabel(
+                f"{t + 1} fix. seen", fontsize=7, rotation=90, labelpad=4,
+            )
 
         plt.tight_layout()
-        out_path = output_dir / f"comparison_sample{s_idx:02d}.png"
+        suffix = f"_{fig_idx:02d}" if n_total > images_per_fig else ""
+        out_path = output_dir / f"comparison{suffix}.png"
         plt.savefig(out_path, dpi=130, bbox_inches="tight")
         plt.close(fig)
         print(f"saved {out_path}", flush=True)
@@ -315,77 +344,97 @@ def plot_extreme_cases(
 
 
 # ---------------------------------------------------------------------------
-# data collection
+# data collection  (split into two stages so all models share the same data)
 # ---------------------------------------------------------------------------
 
+def collect_raw_samples(
+    loader: torch.utils.data.DataLoader,
+    n_samples: int,
+    scan_batches: int,
+) -> list[dict]:
+    """
+    Stage 1 — collect raw (image, fixations) tuples WITHOUT running any model.
+    All models will later be evaluated on exactly this same set so that
+    comparison panels show the same image/scanpath/prefix for every column.
+    """
+    raw: list[dict] = []
+    for batch_idx, batch in enumerate(loader):
+        if batch_idx >= scan_batches:
+            break
+        B = batch["image"].shape[0]
+        for b in range(B):
+            if len(raw) >= n_samples:
+                break
+            fix_len = int(batch["fixations_len"][b].item())
+            if fix_len < 3:
+                continue
+            raw.append({
+                "image":         batch["image"][b],          # CPU tensor
+                "fixations":     batch["fixations"][b],      # CPU tensor
+                "fixations_len": fix_len,
+            })
+        if len(raw) >= n_samples:
+            break
+    return raw
+
+
 @torch.no_grad()
-def collect_samples(
+def run_model_on_raw(
+    model: ScanpathModel,
+    raw_samples: list[dict],
+    device: str,
+) -> list[dict]:
+    """
+    Stage 2 — run model inference on the pre-collected raw samples.
+    Returns the same dicts augmented with log_preds.
+    """
+    result = []
+    for s in raw_samples:
+        image         = s["image"].unsqueeze(0).to(device)
+        fixations     = s["fixations"].unsqueeze(0).to(device)
+        fixations_len = torch.tensor([s["fixations_len"]], device=device)
+        log_preds     = model(image, fixations, fixations_len)  # (1, T, H, W)
+        result.append({
+            "image":         s["image"],
+            "fixations":     s["fixations"],
+            "fixations_len": s["fixations_len"],
+            "log_preds":     log_preds[0].cpu(),              # (T, H, W)
+        })
+    return result
+
+
+@torch.no_grad()
+def collect_extreme_cases(
     model: ScanpathModel,
     loader: torch.utils.data.DataLoader,
     device: str,
-    n_samples: int,
     scan_batches: int,
     n_good_bad: int,
-) -> tuple[list[dict], list[dict], list[dict]]:
+) -> tuple[list[dict], list[dict]]:
     """
-    Returns:
-        samples      — first n_samples full sequences for evolution/comparison plots
-        good_cases   — n_good_bad steps with highest LL
-        bad_cases    — n_good_bad steps with lowest LL
-
-    Memory-efficient: uses running heaps for good/bad cases so only
-    2*n_good_bad case dicts are held in memory at any time regardless
-    of how many batches are scanned.
+    Scan the loader and find the n_good_bad steps with highest / lowest LL.
+    Uses running heaps so memory stays O(n_good_bad) regardless of scan size.
     """
-    samples = []
-
-    # good_heap: min-heap of (ll_val, counter, data_dict)
-    #   → we keep the n_good_bad HIGHEST ll_val entries
-    #   → since it's a min-heap, the smallest-ll entry is always at the root
-    #   → when full, discard root if new entry is larger
     good_heap: list = []
-
-    # bad_heap: max-heap implemented as min-heap of (-ll_val, counter, data_dict)
-    #   → we keep the n_good_bad LOWEST ll_val entries
-    #   → the least-negative entry (highest ll_val among kept) is at the root
-    #   → when full, discard root if new entry is more negative (smaller ll_val)
-    bad_heap: list = []
-
-    counter = 0   # unique tiebreaker so heapq never compares dicts
+    bad_heap:  list = []
+    counter = 0
 
     for batch_idx, batch in enumerate(loader):
         if batch_idx >= scan_batches:
             break
 
-        image         = batch["image"].to(device)           # (B, 3, H, W)
-        fixations     = batch["fixations"].to(device)       # (B, S, 2)
-        fixations_len = batch["fixations_len"].to(device)   # (B,)
+        image         = batch["image"].to(device)
+        fixations     = batch["fixations"].to(device)
+        fixations_len = batch["fixations_len"].to(device)
+        B, S, _       = fixations.shape
+        T             = S - 1
 
-        B, S, _ = fixations.shape
-        T = S - 1
-
-        log_preds = model(image, fixations, fixations_len)  # (B, T, H, W)
-
+        log_preds  = model(image, fixations, fixations_len)
         valid_mask = (
             torch.arange(T, device=device).unsqueeze(0)
             < (fixations_len - 1).unsqueeze(1)
-        )  # (B, T)
+        )
 
-        # collect full samples (for evolution / multi-model)
-        for b in range(B):
-            if len(samples) >= n_samples:
-                break
-            fix_len = int(fixations_len[b].item())
-            if fix_len < 3:
-                continue
-            samples.append({
-                "image":         image[b].cpu(),
-                "fixations":     fixations[b].cpu(),
-                "fixations_len": fix_len,
-                "log_preds":     log_preds[b].cpu(),   # (T, H, W)
-            })
-
-        # collect per-step cases for good/bad (heap-based, O(1) extra memory)
         fix_np_batch  = fixations.cpu().numpy()
         fix_len_batch = fixations_len.cpu().numpy()
 
@@ -394,11 +443,8 @@ def collect_samples(
             for t in range(T):
                 if not valid_mask[b, t].item():
                     continue
-                ll_val = compute_ll_per_step(
-                    log_preds[b, t].cpu(),
-                    fix_np_batch[b, t + 1],
-                )
-                case_data = {
+                ll_val = compute_ll_per_step(log_preds[b, t].cpu(), fix_np_batch[b, t + 1])
+                case   = {
                     "ll_val":        ll_val,
                     "image":         image[b].cpu(),
                     "fixations":     fixations[b].cpu(),
@@ -407,22 +453,16 @@ def collect_samples(
                     "step_t":        t,
                 }
                 counter += 1
-
-                # update good_heap (keep top n_good_bad by ll_val)
-                heapq.heappush(good_heap, (ll_val, counter, case_data))
+                heapq.heappush(good_heap, (ll_val, counter, case))
                 if len(good_heap) > n_good_bad:
-                    heapq.heappop(good_heap)  # evict smallest ll_val
-
-                # update bad_heap (keep bottom n_good_bad by ll_val)
-                heapq.heappush(bad_heap, (-ll_val, counter, case_data))
+                    heapq.heappop(good_heap)
+                heapq.heappush(bad_heap, (-ll_val, counter, case))
                 if len(bad_heap) > n_good_bad:
-                    heapq.heappop(bad_heap)   # evict least-negative (largest ll)
+                    heapq.heappop(bad_heap)
 
-    # sort for consistent output ordering
     good_cases = [c[2] for c in sorted(good_heap, reverse=True)]
     bad_cases  = [c[2] for c in sorted(bad_heap)]
-
-    return samples, good_cases, bad_cases
+    return good_cases, bad_cases
 
 
 # ---------------------------------------------------------------------------
@@ -444,7 +484,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--num-evolution", type=int, default=4,
                         help="samples for evolution plots")
-    parser.add_argument("--num-comparison", type=int, default=4,
+    parser.add_argument("--num-comparison", type=int, default=16,
                         help="samples for multi-model comparison")
     parser.add_argument("--num-good-bad", type=int, default=8,
                         help="cases for good/bad plots")
@@ -490,28 +530,48 @@ def main() -> None:
         num_workers=args.num_workers,
         seed=seed,
         max_images=max_images,
-        max_paths_per_image=args.max_paths_per_image,
+        # One scanpath per image: without this, consecutive samples are different
+        # scanpaths of the same image (val dataset is stored image-by-image),
+        # causing every row in the comparison grid to show the same scene.
+        max_paths_per_image=1,
         use_grouped_sampler=False,
         max_seq_len=max_seq_len,
         parquet_path=parquet_path,
         imagenet_root=imagenet_root,
     )
+
+    # The val split is never shuffled by make_dataloader (images come out in
+    # parquet order, which is sorted by ImageNet class → consecutive images
+    # are all the same class). Shuffle here with a fixed seed for reproducibility.
+    import torch.utils.data as tud
+    g = torch.Generator().manual_seed(seed)
+    val_loader = tud.DataLoader(
+        val_loader.dataset,
+        batch_size=args.batch_size,
+        sampler=tud.RandomSampler(val_loader.dataset, generator=g),
+        num_workers=args.num_workers,
+        pin_memory=True,
+    )
     print(f"val samples: {len(val_loader.dataset)}", flush=True)
 
-    # ---- collect data for each model ----
+    n_samples   = max(args.num_evolution, args.num_comparison)
+    scan_batches = max(args.scan_batches, (args.num_comparison * 2) // args.batch_size + 1)
+
+    # ---- stage 1: collect raw data ONCE (same images/fixations for all models) ----
+    print("\ncollecting raw samples (shared across all models)...", flush=True)
+    raw_samples = collect_raw_samples(val_loader, n_samples=n_samples,
+                                      scan_batches=scan_batches)
+    print(f"  collected {len(raw_samples)} raw samples", flush=True)
+
+    # ---- stage 2: per-model inference on the shared raw data ----
     all_model_samples = []
 
     for ckpt, name in zip(checkpoints, model_names):
-        print(f"\ncollecting from model: {name}", flush=True)
+        print(f"\nprocessing model: {name}", flush=True)
         model = build_model(ckpt, device)
-        samples, good_cases, bad_cases = collect_samples(
-            model=model,
-            loader=val_loader,
-            device=device,
-            n_samples=max(args.num_evolution, args.num_comparison),
-            scan_batches=args.scan_batches,
-            n_good_bad=args.num_good_bad,
-        )
+
+        # run inference on the SAME raw samples every model sees
+        samples = run_model_on_raw(model, raw_samples, device)
         all_model_samples.append(samples)
 
         model_out_dir = output_dir / name
@@ -524,8 +584,13 @@ def main() -> None:
             num_samples=args.num_evolution,
         )
 
-        # plot 3/4: good and bad cases
-        print(f"  plotting good/bad cases...", flush=True)
+        # plot 3/4: good and bad cases (model-specific — different models have
+        # different best/worst predictions, so scan independently per model)
+        print(f"  scanning for good/bad cases...", flush=True)
+        good_cases, bad_cases = collect_extreme_cases(
+            model=model, loader=val_loader, device=device,
+            scan_batches=scan_batches, n_good_bad=args.num_good_bad,
+        )
         plot_extreme_cases(good_cases, model_out_dir / "good_bad", tag="good",
                            n_cols=min(4, args.num_good_bad))
         plot_extreme_cases(bad_cases,  model_out_dir / "good_bad", tag="bad",

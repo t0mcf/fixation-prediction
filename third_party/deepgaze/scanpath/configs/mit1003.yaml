@@ -1,0 +1,81 @@
+# scanpath/configs/mit1003.yaml
+# Full MIT1003 training pipeline.
+# Stage 1 : spatial finetune on MIT1003 (starts from SALICON spatial checkpoint).
+# Stage 2 : scanpath network with frozen backbone (lr=0.001, wider milestones).
+# Stage 3 : full model finetune (very low lr).
+# All three stages are run per cross-validation fold.
+default_args:
+  - base.yaml
+
+training:
+  mode: mit1003
+  out_dir: runs/mit1003_run_01
+
+  dataset_dir: "/mnt/vast-nhr/projects/nim00018/datasets"
+
+  # Path to the SALICON run directory (not the checkpoint file itself).
+  # The loader auto-appends /pretraining/final.pth (or /best.pth as fallback).
+  # Always pass this via CLI: --spatial_pretrain_path runs/salicon_pretrain/<RUN_NAME>
+  spatial_pretrain_path: runs/salicon_pretrain/2026_04_07_19_00_41_d9def0a5
+
+  # Direct path to a full scanpath .pth checkpoint (e.g. imagenet-pretrained).
+  # When set, Stage 1 (spatial-only finetune) is SKIPPED and Stage 2 is
+  # initialised directly from this checkpoint.  Mutually exclusive with the
+  # Stage-1-then-Stage-2 flow driven by spatial_pretrain_path.
+  scanpath_pretrain_path: ~
+
+  # Scanpath-MODULE transfer (2026-09-03): full synthetic scanpath .pth whose
+  # scanpath_network.* and history-specific fixation-selection keys seed
+  # Stage 2 AFTER the normal Stage 1; the MIT1003 stage-1 weights are loaded
+  # on top. Use together with spatial_pretrain_path (stage 1 still runs).
+  scanpath_module_pretrain_path: ~
+
+  crossval_folds: 10          # full CV; must be >= 5 (pysaliency's 2-fold split is broken for plain Fixations)
+  fold_split_seed: ~          # int => use fixation-prediction's image-wise split (seed 42 there) instead of pysaliency's; for cross-model fold parity
+  fixed_split_dir: ~          # dir with train.txt/validation.txt image lists => single run on that fixed split instead of cross-validation
+
+  batch_size: 32
+  num_workers: 4
+  use_lmdb: false                # MIT1003 is small — full dataset loaded to CPU RAM (cached=True), no LMDB needed
+
+  optimizer:
+    lr: 0.008                    # linear scaling rule: paper lr=0.001 × batch_size/4 = 0.001 × 8 = 0.008
+
+  # --- Stage 1: spatial finetune on MIT1003 ---
+  stage1:
+    lr_milestones: [3, 6, 9, 12, 15, 18, 21, 24]
+    downsample: 2
+    readout_factor: 4
+    saliency_map_factor: 4
+
+  # --- Stage 2: scanpath network, backbone frozen ---
+  # Backbone conv weights are frozen; only the scanpath head is trained.
+  # frozen_scopes lists the top-level parameter name prefixes to freeze.
+  stage2:
+    lr: 0.008                # linear scaling: paper lr=0.001 × 8 (batch_size=32 vs paper's 4)
+    lr_milestones: [10, 20, 30, 31, 32, 33, 34, 35]
+    downsample: 2
+    readout_factor: 4
+    saliency_map_factor: 4
+    use_frozen_scopes: true   # set false (or --use_frozen_scopes false) to skip freezing
+    frozen_scopes:
+      - "saliency_network.layernorm0"
+      - "saliency_network.conv0"
+      - "saliency_network.bias0"
+      - "saliency_network.layernorm1"
+      - "saliency_network.conv1"
+      - "saliency_network.bias1"
+
+  # --- Stage 3: full model finetune ---
+  stage3:
+    lr: 0.00008              # linear scaling: paper lr=0.00001 × 8
+    lr_milestones: [3, 6, 9]   # same as paper; 8e-5→8e-6→8e-7→8e-8 → stops after 9 epochs
+    downsample: 2
+    readout_factor: 4
+    saliency_map_factor: 4
+
+  centerbias:
+    use_centerbias: true
+    crossvalidated: true           # CrossvalidatedBaselineModel for leave-one-out CV
+    bandwidth: 0.021544            # == 10**-1.6667673342543432
+    eps: 1.305e-15                 # == 10**-14.884189168516073

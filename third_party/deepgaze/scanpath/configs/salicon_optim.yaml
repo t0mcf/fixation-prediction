@@ -1,0 +1,11 @@
+# scanpath/configs/salicon_optim.yaml
+# Optimized SALICON pretraining: 30 epochs with LR decay at 15, 20, 25.
+# Inherits everything from salicon.yaml; only overrides epoch count and LR schedule.
+default_args:
+  - salicon.yaml
+
+training:
+  max_epochs_pretraining: 30
+  stage1:
+    lr_milestones: [15, 20, 25]
+    # lr=0.001 → 1e-4 → 1e-5 → 1e-6 after epochs 15,20,25; stops at epoch 30

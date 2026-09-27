@@ -15,8 +15,22 @@
 # --eval-batches -1 disables the batch cap; the crop geometry must be set
 # explicitly because it is env-driven, not stored in the checkpoint.
 
+#
+#   sbatch slurm/eval_v2_ladder_indomain.sh                                  # validation_5k
+#   sbatch --export=ALL,IMAGE_LIST=.../test_10k.txt slurm/eval_v2_ladder_indomain.sh   # TEST DAY ONLY
+#   SEED=43 for the replicate ladder (runs/v2_*_5p_ll_seed43).
+
 set -eo pipefail
-mkdir -p logs runs/v2_eval_indomain
+: "${IMAGE_LIST:=}"
+: "${SEED:=42}"
+OUTDIR=runs/v2_eval_indomain
+LIST_ARG=""
+if [ -n "$IMAGE_LIST" ]; then
+  case "$IMAGE_LIST" in *test_10k*) OUTDIR=runs/v2_eval_indomain_test ;; *) OUTDIR=runs/v2_eval_indomain_$(basename "${IMAGE_LIST%.txt}") ;; esac
+  LIST_ARG="--image-list $IMAGE_LIST"
+fi
+[ "$SEED" != "42" ] && OUTDIR="${OUTDIR}_seed${SEED}"
+mkdir -p logs "$OUTDIR"
 source ~/miniforge3/etc/profile.d/conda.sh
 conda activate praktikum
 export HTTPS_PROXY="http://www-cache.gwdg.de:3128"
@@ -29,15 +43,15 @@ SIZES=(1k 10k 50k 100k 200k 400k 800k)
 S=${SIZES[$((SLURM_ARRAY_TASK_ID / 2))]}
 CKPTS=(final.pt best_val_ll.pt)
 C=${CKPTS[$((SLURM_ARRAY_TASK_ID % 2))]}
-RUN="runs/v2_${S}_5p_ll_seed42"
+RUN="runs/v2_${S}_5p_ll_seed${SEED}"
 CKPT="$RUN/checkpoints/$C"
 test -f "$CKPT" || { echo "missing: $CKPT" >&2; exit 4; }
-OUT="runs/v2_eval_indomain/${S}_${C%.pt}.log"
+OUT="$OUTDIR/${S}_${C%.pt}.log"
 
-echo "SIZE=$S CKPT=$C OURS_CROP_TRANSFORM=$OURS_CROP_TRANSFORM"
+echo "SIZE=$S SEED=$SEED CKPT=$C IMAGE_LIST=${IMAGE_LIST:-validation_5k(canonical)} OURS_CROP_TRANSFORM=$OURS_CROP_TRANSFORM"
 python scripts/evaluate_checkpoint.py \
   --checkpoint "$CKPT" \
-  --eval-batches -1 \
+  --eval-batches -1 $LIST_ARG \
   --batch-size 64 --num-workers 8 \
   2>&1 | tee "$OUT"
 echo "done $S $C -> $OUT"

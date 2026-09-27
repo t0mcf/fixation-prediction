@@ -1,0 +1,26 @@
+{
+  "manifest_sha256": "2f4ba64734bf18733cec123a05645949daf8d60b4bef50dedc3a71a8db432da4",
+  "evidence": {
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/synthetic_fair/validation/ours_1k_seed42/metrics.json": "c4b831abb9f973d7e7e59af4276902b08dc8793e4dc2ac69aa6a032eb16b0d5b",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/synthetic_fair/validation/ours_10k_seed42/metrics.json": "e4f13e1db4d5500d5603cf4445650f9526b0a0217ef1da803577018c36dce72e",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/synthetic_fair/validation/ours_50k_seed42/metrics.json": "5051c95e5e9b3e73a8a889e613a68e2b2a8fd51219cd60e0068890722311ff2c",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/synthetic_fair/validation/ours_100k_seed42/metrics.json": "af5af69a52f93fbf490920558e58ae21dd7fdf5fe567042d135d2e9347f96c04",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/synthetic_fair/validation/ours_200k_seed42/metrics.json": "a792e13e735726cc5c7c94327ba8d7f7c2f642b06b317d8e7ba2913c76bcfe5e",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/synthetic_fair/validation/ours_400k_seed42/metrics.json": "eb710bf12f98c0a5bb9b684163244129f58ada672ceb4bf05b43703ba060c162",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/synthetic_fair/validation/ours_800k_seed42/metrics.json": "8a4718cc3d41baa8451fab9021b73aa0bb5a3a2a0e7fef22c4389e6653e18dda",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/synthetic_fair/validation/ours_1k_seed43/metrics.json": "792e15b99795baccfc17046a75d80d5efc81bd916e2b7f0f93f061cfe525906d",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/synthetic_fair/validation/ours_10k_seed43/metrics.json": "5e0ce20a9e723b69cfe403ce69b35572ace514d216c46eac7a6b8ef16ce40a3f",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/synthetic_fair/validation/ours_50k_seed43/metrics.json": "b6538ee3aabb74c2a21ccea4215e0e313c40746cf3ce9ed873b16cb1779e1eaa",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/synthetic_fair/validation/ours_100k_seed43/metrics.json": "797cf4554e918b6767447a5a29c3f9db46d0a8afcd8cac745efd2cd076eff64a",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/synthetic_fair/validation/ours_200k_seed43/metrics.json": "ff8130f728fcaf842e7da4dbc5628dd1831c7e8f6764e6cf85f839531cd181ac",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/synthetic_fair/validation/ours_1k_seed44/metrics.json": "975560792153d27cf98ddd1dda1a2b90dc75cddd46bf9c37d4e66d508b27810c",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/synthetic_fair/validation/ours_10k_seed44/metrics.json": "8dd48fa522ece86aab9f0dd46747748e31bbc99359e25a1732808b2f3b0290f7",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/synthetic_fair/validation/ours_50k_seed44/metrics.json": "10c31d7980ee77e133427d057b7a2c50c36fab49528744bb231fb6814c01e51c",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/synthetic_fair/validation/dg3_1k/metrics.json": "1e16b534842914fa48040ab1560d8334cede0e7d708198658b34a94fd2c889e2",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/synthetic_fair/validation/dg3_10k/metrics.json": "a662893aaab7a6ca5bdbeb70271973c9d8189303bb93347574b542b48f9c1b0a",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/synthetic_fair/validation/dg3_50k/metrics.json": "313ae2fdb8af5eb1ea2a073f0e1ecb11399f0ff1f7dab52d77e0dab5a2d84a70",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/synthetic_fair/validation/dg3_100k/metrics.json": "2574c41d40fc8c597a2204e141b5e0d77ababd7c16cfc3ce15ff73285548de42",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/runs/synthetic_fair/validation/dg3_200k/metrics.json": "4d28f2c224334e02abddd078d179a94d07523d475fcb77ef63461e9a39b757ef"
+  },
+  "legacy_validation_provenance": "Audited existing outputs: checkpoint/split hashes and reproduction. Original jobs did not record source hashes."
+}

@@ -1,0 +1,19 @@
+# Same data as test_datasets/oursynth_100k.yaml but reading the VALIDATION
+# split: oursynth_*_fixations_test.json is empty (0 records) for every ladder
+# scale, so the default test split makes run_metrics die in perform_kld with
+# "zero-size array to reduction operation minimum".
+#
+# NOTE: only the outer config key is renamed. `name` must stay oursynth_100k --
+# mit1003.py:65 builds the filename as f'{name}_fixations_{split}.json', so
+# renaming it looks for a file that does not exist.
+oursynth_100k_valsplit:
+  _target_: src.data.components.mit1003.mit1003.MIT1003Dataset
+  name: oursynth_100k
+  root_path: ./data/oursynth_100k
+  task: What do you see in the image?
+  split: valid
+  num_subjects: 5
+  time_in_ms: false
+  use_abs_coords: true
+  task_embeddings_file: task_embeddings.npy
+  img_features_dir: dinov2_base_timm_image_features

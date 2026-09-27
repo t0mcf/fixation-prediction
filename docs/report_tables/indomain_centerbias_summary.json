@@ -1,0 +1,27 @@
+{
+ "n_fit_images": 20000,
+ "seed": 0,
+ "path_ids": [
+  0,
+  1,
+  2,
+  3,
+  4
+ ],
+ "targets": "fixations 1..15 (centre start excluded)",
+ "fit_keys_sha256": "d34eab833abc500bd5b424105ce9814a5be140cb2f1dece7aa42accb62603d58",
+ "validation": {
+  "n_images": 5000,
+  "cb_ll_img_mean": {
+   "64": 0.3980507568556932,
+   "224": 0.36985364856309605
+  }
+ },
+ "test": {
+  "n_images": 10000,
+  "cb_ll_img_mean": {
+   "64": 0.39841162161768007,
+   "224": 0.37030778697057687
+  }
+ }
+}

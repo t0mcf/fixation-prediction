@@ -1,0 +1,32 @@
+# scanpath/configs/salicon.yaml
+# Stage 0: spatial pretraining on SALICON (human mouse-click fixations, ~10k images).
+# Run this first; the checkpoint is used as the starting point for mit1003.yaml.
+default_args:
+  - base.yaml
+
+training:
+  mode: salicon
+  out_dir: runs/salicon_pretrain
+
+  dataset_dir: "/mnt/vast-nhr/projects/nim00018/datasets"
+  image_size: ~              # SALICON images vary in size; no fixed crop applied
+
+  use_lmdb: false            # false = in-memory; set true only if RAM is tight
+                             # (if LMDB re-enabled: reopen env per worker, not in main process)
+
+  batch_size: 4
+  num_workers: 4             # SALICON images are variable-size — batches must share shape;
+                             # num_workers=0 avoids fork issues until uniform-size batching is added
+
+  centerbias:
+    use_centerbias: false
+    crossvalidated: false          # simple BaselineModel (not crossvalidated)
+    bandwidth: 0.0217              # taken from an early MIT1003 fit; fine for SALICON's density
+    eps: 2.0e-13
+
+  optimizer:
+    lr: 0.001
+
+  stage1:
+    lr_milestones: [15, 30, 45, 60, 75, 90, 105, 120]
+    downsample: 1.5          # SALICON pretraining uses coarser downsample than MIT1003 finetune

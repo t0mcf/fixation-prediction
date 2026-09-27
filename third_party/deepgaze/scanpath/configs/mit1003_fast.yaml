@@ -1,0 +1,26 @@
+# scanpath/configs/mit1003_fast.yaml
+# Fast 5-epoch-per-stage MIT1003 run for quick iteration / debugging.
+# Inherits everything from mit1003.yaml; only overrides max_epochs and lr_milestones.
+# Per stage: 4 epochs at full LR, 1 epoch at LR×0.1, then stop.
+default_args:
+  - mit1003.yaml
+
+training:
+  stage1:
+    max_epochs: 10
+    lr_milestones: [8]
+
+  stage2:
+    max_epochs: 7
+    lr_milestones: [5]
+    frozen_scopes:
+      - "saliency_network.layernorm0"
+      - "saliency_network.conv0"
+      - "saliency_network.bias0"
+      # - "saliency_network.layernorm1"
+      # - "saliency_network.conv1"
+      # - "saliency_network.bias1"
+
+  stage3:
+    max_epochs: 7
+    lr_milestones: [5]

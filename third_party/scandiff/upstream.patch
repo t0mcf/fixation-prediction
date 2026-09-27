@@ -1,0 +1,420 @@
+--- a/configs/train.yaml
++++ b/configs/train.yaml
+@@ -50,5 +50,9 @@
+ # simply provide checkpoint path to resume training
+ ckpt_path: null
+ 
++# weights-only init for fine-tuning: loads model weights, NOT optimizer state or
++# epoch counter (fresh AdamW, starts at epoch 0). Mutually exclusive with ckpt_path.
++init_from: null
++
+ # seed for random number generators in pytorch, numpy and python.random
+ seed: null
+--- a/configs/trainer/default.yaml
++++ b/configs/trainer/default.yaml
+@@ -11,4 +11,10 @@
+ 
+ deterministic: False
+ learning_rate: 1e-4
+-weight_decay: 1e-2
+\ No newline at end of file
++weight_decay: 1e-2
++
++# Reproduce the authors' effective training regime: BatchNorm statistics
++# frozen + dropout off from epoch 1 on (a side effect of their in-training
++# evaluator, visible in the released checkpoint's num_batches_tracked=318).
++# false = original behaviour, unchanged.
++freeze_mode_after_epoch0: false
+\ No newline at end of file
+--- a/src/callbacks/model_checkpoint.py
++++ b/src/callbacks/model_checkpoint.py
+@@ -1,4 +1,6 @@
+ import torch
++import random
++import numpy as np
+ from pathlib import Path
+ 
+ from src.utils.train_utils import get_device
+@@ -40,22 +42,37 @@
+         self.global_epoch += 1
+ 
+     def save_checkpoint(self, model, optimizer, save_last=False):
+-        ckpt_dict = {'model': model.state_dict(), 'optimizer': optimizer.state_dict(), 'global_step': self.global_step, 'global_epoch': self.global_epoch}
++        ckpt_dict = {
++            'model': model.state_dict(),
++            'optimizer': optimizer.state_dict(),
++            'global_step': self.global_step,
++            'global_epoch': self.global_epoch,
++            'python_rng_state': random.getstate(),
++            'numpy_rng_state': np.random.get_state(),
++            'torch_rng_state': torch.get_rng_state(),
++            'cuda_rng_state': torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None,
++        }
+         if not save_last:
+             torch.save(ckpt_dict, Path(self.dirpath, f"epoch_{str(self.global_epoch)}" + '.pt'))
+         else:
+             torch.save(ckpt_dict, Path(self.dirpath, 'last' + '.pt'))
+     
+-    def resume_checkpoint(self, model, optimizer, ckpt_path):
+-        
++    def resume_checkpoint(self, model, optimizer, ckpt_path, weights_only=False):
++        """weights_only=True loads model weights only: optimizer stays freshly
++        constructed (configure_optimizer already ran) and global_step/global_epoch
++        stay at 0, i.e. this is a fine-tune init, not a resume."""
++
+         device = get_device()
+-        ckpt = torch.load(ckpt_path)
++        ckpt = torch.load(ckpt_path, map_location=device)
+         model.load_state_dict(ckpt['model'])
+         model.to(device)
+-        
++
++        if weights_only:
++            return
++
+         if optimizer is not None:
+             optimizer.load_state_dict(ckpt['optimizer'])
+-            
++
+             # Move optimizer state to the same device
+             for param in optimizer.state.keys():
+                 # 'param' is a model parameter, its state is a dictionary
+@@ -63,9 +80,20 @@
+                 for k, v in state.items():
+                     if isinstance(v, torch.Tensor):
+                         state[k] = v.to(device)
+-            
++
+         self.global_step = ckpt['global_step']
+         self.global_epoch = ckpt['global_epoch']
++        if 'python_rng_state' in ckpt:
++            random.setstate(ckpt['python_rng_state'])
++            np.random.set_state(ckpt['numpy_rng_state'])
++            # torch.load above used map_location=device, so every tensor in the
++            # checkpoint -- including the RNG states -- came back on the GPU.
++            # set_rng_state wants a CPU ByteTensor and raises otherwise, which
++            # is what broke every resume of the thesis-v2 ladder.
++            torch.set_rng_state(ckpt['torch_rng_state'].cpu().to(torch.uint8))
++            if torch.cuda.is_available() and ckpt.get('cuda_rng_state') is not None:
++                torch.cuda.set_rng_state_all(
++                    [s.cpu().to(torch.uint8) for s in ckpt['cuda_rng_state']])
+     
+     def on_epoch_end(self, model, optimizer):
+         if self.global_epoch % self.every_n_epochs == 0:
+@@ -74,4 +102,4 @@
+         if self.save_last:
+             self.save_checkpoint(model, optimizer, save_last=True)
+         
+-        self.update_global_epoch()
+\ No newline at end of file
++        self.update_global_epoch()
+--- a/src/data/components/mit1003/mit1003.py
++++ b/src/data/components/mit1003/mit1003.py
+@@ -7,6 +7,47 @@
+ import json
+ 
+ 
++class ChunkedFeatureLoader:
++    """Load image features from chunked .pth files with an index.
++    Prefers memory-mapped .npy if available (created by convert_features_to_memmap.py).
++    Falls back to chunked .pth, then individual .pth files."""
++
++    def __init__(self, features_dir):
++        self.features_dir = Path(features_dir)
++        memmap_index_path = self.features_dir / "memmap_index.json"
++        if memmap_index_path.exists():
++            with open(memmap_index_path) as f:
++                meta = json.load(f)
++            self.memmap = np.memmap(
++                self.features_dir / "features.npy",
++                dtype=meta["dtype"], mode="r",
++                shape=tuple(meta["shape"]),
++            )
++            self.memmap_idx = meta["index"]
++            self.mode = "memmap"
++        else:
++            index_path = self.features_dir / "index.json"
++            if index_path.exists():
++                with open(index_path) as f:
++                    self.index = json.load(f)
++                self.mode = "chunked"
++            else:
++                self.mode = "individual"
++            self._cache_name = None
++            self._cache_data = None
++
++    def load(self, stem):
++        if self.mode == "memmap":
++            row = self.memmap_idx[stem]
++            return torch.from_numpy(self.memmap[row].copy()).float()
++        if self.mode == "individual":
++            return torch.load(self.features_dir / f"{stem}.pth", weights_only=True)
++        chunk_name = self.index[stem]
++        if chunk_name != self._cache_name:
++            self._cache_data = torch.load(self.features_dir / chunk_name, weights_only=True)
++            self._cache_name = chunk_name
++        return self._cache_data[stem]
++
+ 
+ class MIT1003Dataset:
+     def __init__(self, name: str, root_path: str, task: str, split: str, num_subjects: int, threshold: float = -1., threshold_no_dur: float = -1.,
+@@ -20,28 +61,29 @@
+ 
+         if split == 'valid':
+             split = 'validation'
+-        
+-        with open(Path(self.root_path, f'mit1003_fixations_{split}.json'), 'rb') as f:
++
++        with open(Path(self.root_path, f'{name}_fixations_{split}.json'), 'rb') as f:
+             data = json.load(f)
+-            
+-        
++
++
+         self.samples = {'sequences': []}
+         self.samples['sequences'] = [s for s in data if s['split'] == split]
+-        
++
+         self.num_subjects = num_subjects
+         self.time_in_ms = time_in_ms
+         self.use_abs_coords = use_abs_coords
+         self.truncate_seconds = truncate_seconds
+         self.img_features_dir = img_features_dir
+-        
+-        self.subject_per_img = {} # this variable also contains the number of unique images of that split
+-        
++        self.feat_loader = ChunkedFeatureLoader(Path(root_path, img_features_dir))
++
++        self.subject_per_img = {}
++
+         for s in self.samples['sequences']:
+-            if s['name'] not in self.subject_per_img: # the number is not the same for all imgs because too short scanpaths are discarded.
++            if s['name'] not in self.subject_per_img:
+                 self.subject_per_img[s['name']] = 1
+             else:
+                 self.subject_per_img[s['name']] += 1
+-                
++
+         self.embeddings = np.load(
+             open(
+                 Path('./data', task_embeddings_file),
+@@ -49,18 +91,18 @@
+             ),
+             allow_pickle=True,
+         ).item()
+-        
++
+         self.task_embedding = torch.from_numpy(self.embeddings[""])
+ 
+     def __getitem__(self, index: int):
+         sample = self.samples['sequences'][index]
+         img_filename = sample['name']
+-        
++
+         num_viewers = self.subject_per_img[img_filename]
+         original_width = sample['width']
+         original_height = sample['height']
+-        img_features_path = Path(self.root_path, self.img_features_dir, Path(sample['name']).stem + '.pth')
+-        img_feats = torch.load(img_features_path).unsqueeze(0)
++        stem = Path(sample['name']).stem
++        img_feats = self.feat_loader.load(stem).float().unsqueeze(0)
+                 
+         x_coords = sample['X'] # x, y coords in osie are already in absolute terms
+         y_coords = sample['Y']
+--- a/src/data/unified_datamodule.py
++++ b/src/data/unified_datamodule.py
+@@ -68,6 +68,13 @@
+             shuffle=True,
+             collate_fn=self.train_collators[0],
+             drop_last=self.drop_last,
++            # keep workers (and their open memmap handle) alive across epochs so
++            # the Lustre-backed feature reads stay I/O-parallel instead of the
++            # latency-bound single-worker trickle. Default prefetch (2) is kept
++            # deliberately: more workers already parallelise the reads, and a
++            # higher prefetch would inflate /dev/shm traffic (which counts
++            # against the job's memory cgroup) toward the earlier Bus-error OOM.
++            persistent_workers=self.num_workers > 0,
+         )
+ 
+     def val_dataloader(self) -> DataLoader[Any]:
+--- a/src/train.py
++++ b/src/train.py
+@@ -32,6 +32,9 @@
+ def main(cfg: DictConfig):
+     extras(cfg)
+ 
++    if cfg.get("seed") is not None:
++        seed_everything(cfg.seed)
++
+     log.info("Instantiating callbacks...")
+     callbacks: List = instantiate_callbacks(cfg.get("callbacks"))
+     callbacks = callbacks[0]  # return only the model checkpoint callback
+@@ -100,6 +103,7 @@
+             diffusion,
+             datamodule,
+             ckpt_path=cfg.get("ckpt_path"),
++            init_from=cfg.get("init_from"),
+             evaluator=evaluator,
+         )
+ 
+--- a/src/trainer.py
++++ b/src/trainer.py
+@@ -14,7 +14,7 @@
+         self, default_root_dir, min_epochs, max_epochs, accelerator,
+         limit_train_batches=1.0, limit_val_batches=1.0, limit_test_batches=1.0, learning_rate=1e-4,
+         weight_decay=1e-2, validation_every_n_epochs=5, test_every_n_epochs=5, schedule_sampler=None, evaluator=None,
+-        model_checkpoint=None, deterministic=False, loggers=None
++        model_checkpoint=None, deterministic=False, loggers=None, freeze_mode_after_epoch0=False
+     ) -> None:
+         self.default_root_dir = default_root_dir
+         self.min_epochs = min_epochs
+@@ -35,38 +35,68 @@
+         self.evaluator = evaluator
+         self.model=None
+         self.loggers = loggers
++        # The authors' effective training regime: their in-loop evaluator sets
++        # model.eval() at the epoch-0 validation and nothing ever reverts it,
++        # so BatchNorm statistics freeze after one epoch and dropout is off
++        # from epoch 1 on (the released checkpoint's num_batches_tracked=318 =
++        # exactly one epoch). True reproduces that regime explicitly, without
++        # needing an evaluator. False changes nothing: the original
++        # (evaluator-leak-preserving) mode behaviour stays untouched.
++        self.freeze_mode_after_epoch0 = freeze_mode_after_epoch0
+ 
+ 
+     def _setup_train(self, datamodule):
+         datamodule.setup()
+         self.configure_optimizer(lr=self.learning_rate)
+     
+-    def train(self, model, diffusion, datamodule, ckpt_path=None, evaluator=None):
++    def train(self, model, diffusion, datamodule, ckpt_path=None, init_from=None, evaluator=None):
++        assert ckpt_path is None or init_from is None, \
++            "ckpt_path (resume) and init_from (fine-tune init) are mutually exclusive"
+         self.model = model
+         self.evaluator = evaluator
+         if evaluator is not None:
+             self.evaluator.limit_test_batches = self.limit_test_batches
+-        
++
+         self._setup_train(datamodule)
+-        
++
+         print("Starting Training...")
+         start_epoch = 0
+-        
++
+         if self.model_checkpoint and ckpt_path is not None:
+             self.model_checkpoint.resume_checkpoint(self.model, self.opt, ckpt_path)
+             start_epoch = self.model_checkpoint.global_epoch + 1 #+1 because the global_epoch is updated after the checkpoint is saved
+                                                                 #see on_epoch_end() method in ModelCheckpoint class
++        elif self.model_checkpoint and init_from is not None:
++            print(f"Fine-tune init: loading weights only from {init_from}")
++            self.model_checkpoint.resume_checkpoint(self.model, None, init_from, weights_only=True)
+         model.to(self.accelerator)
+         model.train()
+ 
+         for cur_epoch in range(start_epoch, self.max_epochs):
++            # Regime enforcement (see __init__). Only acts when the flag is
++            # set; with the flag off the original mode behaviour is preserved
++            # bit for bit, including the upstream evaluator leak.
++            if self.freeze_mode_after_epoch0:
++                if cur_epoch >= 1:
++                    model.eval()
++                else:
++                    model.train()
+             self._train_one_epoch(cur_epoch, model, diffusion, datamodule)
+             
+             if self.model_checkpoint is not None:
+                 self.log({'Epoch Number': self.model_checkpoint.global_epoch})
+                 self.model_checkpoint.on_epoch_end(model, self.opt)
+-                
+-            if cur_epoch % self.validation_every_n_epochs == 0: #validation
++
++            # Diffusion-loss validation (cheap forward pass, no scanpath sampling)
++            # runs independently of the evaluator so we always get a val signal,
++            # even when test=false and no Evaluator is configured.
++            if cur_epoch % self.validation_every_n_epochs == 0:
++                self.validation(cur_epoch, model, diffusion, datamodule)
++
++            # NOTE: guard (self.evaluator is not None) added to match the test branch below.
++            # Original crashed with evaluator=None (test=false) because 0 % N == 0 fires
++            # validation at epoch 0 regardless of validation_every_n_epochs.
++            if self.evaluator is not None and cur_epoch % self.validation_every_n_epochs == 0: #validation
+                 validation_metrics = self.evaluator.test(self.model, diffusion, self.model_checkpoint.global_epoch, is_validation=True)
+                 if validation_metrics is not None:
+                     self.log(validation_metrics)
+@@ -126,29 +156,53 @@
+     def validation(self, i, model, diffusion, datamodule):
+         print(f"Running validation for epoch {i}")
+         self.opt.zero_grad()
+-        
++        model.eval()
++
++        # Use the same diffusion timesteps at every validation epoch without
++        # consuming the global RNG stream used by training.
++        val_generator = torch.Generator(device="cpu").manual_seed(314159)
++
+         with torch.no_grad():
+             val_loader = datamodule.val_dataloader()
+-            
+-            all_val_losses = []
++
++            all_val_losses = {}
+             for curr_step, batch in enumerate(tqdm(val_loader)):
+-                
++
+                 if curr_step >= len(val_loader) * self.limit_val_batches: #limit the number of loops during debugging
+                     break
+-                
++
+                 x = batch['scanpath'].to(self.accelerator)
+                 padding_mask = batch['padding_mask'].to(self.accelerator)
+-                
+-                t = torch.randint(0, diffusion.num_timesteps, (x.shape[0],), device=self.accelerator)
+-                
++                if 'task_embedding' in batch:
++                    task_embedding = batch['task_embedding'].to(self.accelerator)
++                else:
++                    task_embedding = None
++
++                t = torch.randint(
++                    0, diffusion.num_timesteps, (x.shape[0],), generator=val_generator
++                ).to(self.accelerator)
++
+                 model_kwargs = dict(y=batch['img'].to(self.accelerator),
+-                                    padding_mask=padding_mask) #specify possible conditions for the diffusion model
++                                    padding_mask=padding_mask,
++                                    task_embedding=task_embedding) #specify possible conditions for the diffusion model
+                 loss_dict = diffusion.training_losses(model, x, t, model_kwargs)
+-                loss = loss_dict["loss"].mean()
+-                all_val_losses.append(loss.item())
+-                self.log({'validation/loss': loss.item()})
+-            
+-            self.log({'validation/mean_loss': np.mean(all_val_losses)})
++
++                for key in loss_dict:
++                    val = loss_dict[key].mean().item()
++                    all_val_losses.setdefault(key, []).append(val)
++                    self.log({f'validation/{key}': val})
++
++            for key, vals in all_val_losses.items():
++                self.log({f'validation/mean_{key}': np.mean(vals)})
++
++        # Restore the mode the training loop expects. Under the frozen regime
++        # the model must NOT drop back into train mode after epoch 0 —
++        # otherwise this validation pass would silently re-enable BatchNorm
++        # updates and dropout every few epochs and destroy the regime.
++        if self.freeze_mode_after_epoch0 and i >= 1:
++            model.eval()
++        else:
++            model.train()
+             
+     def configure_optimizer(self, lr):
+         self.opt = torch.optim.AdamW(self.model.parameters(), lr=lr, weight_decay=self.weight_decay)
+@@ -165,4 +219,4 @@
+         if ckpt_path is not None:
+             self.model_checkpoint.resume_checkpoint(self.model, None, ckpt_path)
+         
+-        self.evaluator.test(self.model, diffusion, self.model_checkpoint.global_epoch)
+\ No newline at end of file
++        self.evaluator.test(self.model, diffusion, self.model_checkpoint.global_epoch)

@@ -1,0 +1,17 @@
+# scanpath/configs/mit1003_optim.yaml
+# Optimized MIT1003 training: shorter stage 1 and stage 2, same stage 3.
+# Inherits everything from mit1003.yaml; only overrides epochs and stage 2 milestones.
+default_args:
+  - mit1003.yaml
+
+training:
+  stage1:
+    max_epochs: 10
+    # milestones [3,6,9,...] inherited; decays at epochs 3,6,9 fire, rest ignored
+
+  stage2:
+    max_epochs: 20
+    lr_milestones: [10, 15, 19]
+    # lr=0.008 → 8e-4 → 8e-5 → 8e-6 → 8e-7 after epochs 10,15,19,20; stops at epoch 20
+
+  # stage3 unchanged (inherited from mit1003.yaml)

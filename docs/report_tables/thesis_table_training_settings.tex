@@ -1,0 +1,30 @@
+% Training settings of all three model families. Every value read from the
+% saved configuration or training log of the actual runs (2026-09-18):
+%   ours         runs/{v2_*_5p_ll_seed42, ft_authsplit_*, ft_joint_authsplit_*}/config.json
+%   DeepGaze III scanpather/runs/imagenet_paths/dg3_*_5sp/scanpath/config.json + {spatial,scanpath}/log.csv
+%                scanpather/runs/dg3_mit1003_fixedsplit_*/config.json + <stage>/fixedsplit/log.csv
+%   ScanDiff     scandiff/runs_thesis_v2/{oursynth_v2_*,ft_mit_*}/train/.hydra/config.yaml + src/trainer.py
+\begin{table}[t]
+  \centering
+  \small
+  \begin{tabular}{llllll}
+    \toprule
+    & Optimizer & Batch & Learning rate & Schedule & Epochs \\
+    \midrule
+    \multicolumn{6}{l}{\textit{Synthetic training}} \\
+    Our model       & AdamW$^{a}$ & 128 & $3\times10^{-4}$ & 5\% linear warmup, cosine & 18 \\
+    DeepGaze~III, spatial  & Adam & 256 & $2\times10^{-3}$ & $\times0.1$ after epochs 20, 25 & 30 \\
+    DeepGaze~III, scanpath & Adam & 256 & $2\times10^{-3}$ & $\times0.1$ after epochs 5, 8 & 10$^{b}$ \\
+    ScanDiff        & AdamW$^{a}$ & 128 & $10^{-4}$ & constant & 120 \\
+    \midrule
+    \multicolumn{6}{l}{\textit{Human-gaze training (MIT1003; joint training with COCO-FreeView unchanged)}} \\
+    Our model       & AdamW$^{a}$ & 32 & $10^{-4}$ & 5\% linear warmup, cosine & 30 \\
+    DeepGaze~III, spatial  & Adam & 32 & $8\times10^{-3}$ & $\times0.1$ every 3 epochs & 15 \\
+    DeepGaze~III, scanpath (partly frozen) & Adam & 32 & $8\times10^{-3}$ & $\times0.1$ after epochs 10, 20, 30, 31 & 32 \\
+    DeepGaze~III, joint fine-tuning & Adam & 32 & $8\times10^{-5}$ & $\times0.1$ every 3 epochs & 9 \\
+    ScanDiff        & AdamW$^{a}$ & 128 & $10^{-4}$ & constant & 200 \\
+    \bottomrule
+  \end{tabular}
+  \caption{Training settings. Settings were identical across training-set sizes and initializations within each model family. Our model additionally used gradient clipping at a norm of 1.0 and automatic mixed precision; DeepGaze~III and ScanDiff used neither. $^{a}$Weight decay 0.01; DeepGaze~III used no weight decay. $^{b}$The DeepGaze~III run on 200,000 images completed two of these ten epochs.}
+  \label{tab:training-settings}
+\end{table}

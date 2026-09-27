@@ -1,0 +1,86 @@
+{
+  "manifest_sha256": "fffbcfad90ac4e4e7c1f3201a60281ac96a2cf8b0b546564c579ec836f33a57a",
+  "source_sha256": "18454ad9277b838c1505c878e07c056e6221af62ecde2bb1d5771d264f3835ef",
+  "scores": {
+    "ours_scratch_seed42": {
+      "ll_uniform_img": 2.187,
+      "nss_img": 2.781,
+      "auc_img": 0.904
+    },
+    "ours_scratch_seed43": {
+      "ll_uniform_img": 2.164,
+      "nss_img": 2.746,
+      "auc_img": 0.902
+    },
+    "ours_bv1k_seed42": {
+      "ll_uniform_img": 2.238,
+      "nss_img": 2.863,
+      "auc_img": 0.907
+    },
+    "ours_bv1k_seed43": {
+      "ll_uniform_img": 2.231,
+      "nss_img": 2.835,
+      "auc_img": 0.907
+    },
+    "ours_bv10k_seed42": {
+      "ll_uniform_img": 2.386,
+      "nss_img": 3.089,
+      "auc_img": 0.916
+    },
+    "ours_bv10k_seed43": {
+      "ll_uniform_img": 2.393,
+      "nss_img": 3.068,
+      "auc_img": 0.915
+    },
+    "ours_bv50k_seed42": {
+      "ll_uniform_img": 2.471,
+      "nss_img": 3.194,
+      "auc_img": 0.919
+    },
+    "ours_bv50k_seed43": {
+      "ll_uniform_img": 2.453,
+      "nss_img": 3.175,
+      "auc_img": 0.918
+    },
+    "ours_bv100k_seed42": {
+      "ll_uniform_img": 2.479,
+      "nss_img": 3.23,
+      "auc_img": 0.919
+    },
+    "ours_bv100k_seed43": {
+      "ll_uniform_img": 2.462,
+      "nss_img": 3.21,
+      "auc_img": 0.919
+    },
+    "ours_bv200k_seed42": {
+      "ll_uniform_img": 2.486,
+      "nss_img": 3.232,
+      "auc_img": 0.919
+    },
+    "ours_bv200k_seed43": {
+      "ll_uniform_img": 2.479,
+      "nss_img": 3.223,
+      "auc_img": 0.919
+    },
+    "ours_bv400k_seed42": {
+      "ll_uniform_img": 2.494,
+      "nss_img": 3.27,
+      "auc_img": 0.919
+    },
+    "ours_bv400k_seed43": {
+      "ll_uniform_img": 2.49,
+      "nss_img": 3.259,
+      "auc_img": 0.92
+    },
+    "ours_bv800k_seed42": {
+      "ll_uniform_img": 2.527,
+      "nss_img": 3.336,
+      "auc_img": 0.921
+    },
+    "ours_bv800k_seed43": {
+      "ll_uniform_img": 2.517,
+      "nss_img": 3.332,
+      "auc_img": 0.921
+    }
+  }
+}

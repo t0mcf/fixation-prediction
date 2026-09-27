@@ -1,0 +1,985 @@
+{
+  "records": [
+    {
+      "id": "ft_mit_scratch_seed0",
+      "selected": "last",
+      "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_scratch_seed0/train/checkpoints/last.pt",
+      "candidates": {
+        "epoch_10": {
+          "scores": [
+            0.07752141774552851,
+            0.27327967191945624
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed0_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed0_epoch_10_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_scratch_seed0/train/checkpoints/epoch_10.pt"
+        },
+        "epoch_120": {
+          "scores": [
+            0.08261259676256534,
+            0.24636528702381197
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed0_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed0_epoch_120_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_scratch_seed0/train/checkpoints/epoch_120.pt"
+        },
+        "epoch_50": {
+          "scores": [
+            0.10258550931215848,
+            0.29741740455428134
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed0_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed0_epoch_50_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_scratch_seed0/train/checkpoints/epoch_50.pt"
+        },
+        "last": {
+          "scores": [
+            0.07631043807962565,
+            0.16083527033623252
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed0_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed0_last_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_scratch_seed0/train/checkpoints/last.pt"
+        }
+      },
+      "run": "runs_thesis_v2/ft_mit_scratch_seed0",
+      "output": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_testscore/ft_mit_scratch_seed0_last_test"
+    },
+    {
+      "id": "ft_mit_scratch_seed1",
+      "selected": "last",
+      "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_scratch_seed1/train/checkpoints/last.pt",
+      "candidates": {
+        "epoch_10": {
+          "scores": [
+            0.17031282351940197,
+            0.45195899152979385
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed1_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed1_epoch_10_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_scratch_seed1/train/checkpoints/epoch_10.pt"
+        },
+        "epoch_120": {
+          "scores": [
+            0.10691480158516309,
+            0.3184080405917909
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed1_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed1_epoch_120_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_scratch_seed1/train/checkpoints/epoch_120.pt"
+        },
+        "epoch_50": {
+          "scores": [
+            0.1110169318852994,
+            0.2941104078073885
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed1_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed1_epoch_50_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_scratch_seed1/train/checkpoints/epoch_50.pt"
+        },
+        "last": {
+          "scores": [
+            0.10344488719869324,
+            0.287312856697209
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed1_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed1_last_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_scratch_seed1/train/checkpoints/last.pt"
+        }
+      },
+      "run": "runs_thesis_v2/ft_mit_scratch_seed1",
+      "output": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_testscore/ft_mit_scratch_seed1_last_test"
+    },
+    {
+      "id": "ft_mit_av1k_seed0",
+      "selected": "last",
+      "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av1k_seed0/train/checkpoints/last.pt",
+      "candidates": {
+        "epoch_10": {
+          "scores": [
+            0.09564762614859089,
+            0.19286829967289193
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed0_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed0_epoch_10_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av1k_seed0/train/checkpoints/epoch_10.pt"
+        },
+        "epoch_120": {
+          "scores": [
+            0.061945424651937635,
+            0.18028367968430478
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed0_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed0_epoch_120_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av1k_seed0/train/checkpoints/epoch_120.pt"
+        },
+        "epoch_50": {
+          "scores": [
+            0.059312619480563905,
+            0.12395138649784099
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed0_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed0_epoch_50_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av1k_seed0/train/checkpoints/epoch_50.pt"
+        },
+        "last": {
+          "scores": [
+            0.04136862449510143,
+            0.05686941178459527
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed0_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed0_last_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av1k_seed0/train/checkpoints/last.pt"
+        }
+      },
+      "run": "runs_thesis_v2/ft_mit_av1k_seed0",
+      "output": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_testscore/ft_mit_av1k_seed0_last_test"
+    },
+    {
+      "id": "ft_mit_av1k_seed1",
+      "selected": "last",
+      "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av1k_seed1/train/checkpoints/last.pt",
+      "candidates": {
+        "epoch_10": {
+          "scores": [
+            0.14256537265424568,
+            0.26560376644239553
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed1_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed1_epoch_10_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av1k_seed1/train/checkpoints/epoch_10.pt"
+        },
+        "epoch_120": {
+          "scores": [
+            0.0710345001293385,
+            0.18425305396510794
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed1_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed1_epoch_120_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av1k_seed1/train/checkpoints/epoch_120.pt"
+        },
+        "epoch_50": {
+          "scores": [
+            0.05056977884687676,
+            0.11429367593617927
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed1_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed1_epoch_50_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av1k_seed1/train/checkpoints/epoch_50.pt"
+        },
+        "last": {
+          "scores": [
+            0.046281463257217034,
+            0.10474771359392801
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed1_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed1_last_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av1k_seed1/train/checkpoints/last.pt"
+        }
+      },
+      "run": "runs_thesis_v2/ft_mit_av1k_seed1",
+      "output": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_testscore/ft_mit_av1k_seed1_last_test"
+    },
+    {
+      "id": "ft_mit_av10k_seed0",
+      "selected": "epoch_50",
+      "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av10k_seed0/train/checkpoints/epoch_50.pt",
+      "candidates": {
+        "epoch_10": {
+          "scores": [
+            0.14500068271673805,
+            0.38465651921543836
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed0_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed0_epoch_10_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av10k_seed0/train/checkpoints/epoch_10.pt"
+        },
+        "epoch_120": {
+          "scores": [
+            0.058040269908438094,
+            0.10380366689405704
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed0_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed0_epoch_120_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av10k_seed0/train/checkpoints/epoch_120.pt"
+        },
+        "epoch_50": {
+          "scores": [
+            0.052363896382200674,
+            0.11959152263102743
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed0_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed0_epoch_50_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av10k_seed0/train/checkpoints/epoch_50.pt"
+        },
+        "last": {
+          "scores": [
+            0.07122000567094129,
+            0.10153802078299834
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed0_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed0_last_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av10k_seed0/train/checkpoints/last.pt"
+        }
+      },
+      "run": "runs_thesis_v2/ft_mit_av10k_seed0",
+      "output": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_testscore/ft_mit_av10k_seed0_epoch_50_test"
+    },
+    {
+      "id": "ft_mit_av10k_seed1",
+      "selected": "epoch_120",
+      "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av10k_seed1/train/checkpoints/epoch_120.pt",
+      "candidates": {
+        "epoch_10": {
+          "scores": [
+            0.08393338373669895,
+            0.18053186275034994
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed1_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed1_epoch_10_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av10k_seed1/train/checkpoints/epoch_10.pt"
+        },
+        "epoch_120": {
+          "scores": [
+            0.05463058850347445,
+            0.11351907092824576
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed1_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed1_epoch_120_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av10k_seed1/train/checkpoints/epoch_120.pt"
+        },
+        "epoch_50": {
+          "scores": [
+            0.05763665776474049,
+            0.1197578998068028
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed1_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed1_epoch_50_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av10k_seed1/train/checkpoints/epoch_50.pt"
+        },
+        "last": {
+          "scores": [
+            0.06807045965799184,
+            0.09873514480327533
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed1_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed1_last_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av10k_seed1/train/checkpoints/last.pt"
+        }
+      },
+      "run": "runs_thesis_v2/ft_mit_av10k_seed1",
+      "output": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_testscore/ft_mit_av10k_seed1_epoch_120_test"
+    },
+    {
+      "id": "ft_mit_av50k_seed0",
+      "selected": "epoch_120",
+      "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av50k_seed0/train/checkpoints/epoch_120.pt",
+      "candidates": {
+        "epoch_10": {
+          "scores": [
+            0.06896901740854806,
+            0.1635253245556414
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed0_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed0_epoch_10_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av50k_seed0/train/checkpoints/epoch_10.pt"
+        },
+        "epoch_120": {
+          "scores": [
+            0.06553202265404641,
+            0.09322297271116256
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed0_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed0_epoch_120_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av50k_seed0/train/checkpoints/epoch_120.pt"
+        },
+        "epoch_50": {
+          "scores": [
+            0.08053286802366098,
+            0.1356149603202106
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed0_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed0_epoch_50_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av50k_seed0/train/checkpoints/epoch_50.pt"
+        },
+        "last": {
+          "scores": [
+            0.07275773190961085,
+            0.1170625169031766
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed0_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed0_last_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av50k_seed0/train/checkpoints/last.pt"
+        }
+      },
+      "run": "runs_thesis_v2/ft_mit_av50k_seed0",
+      "output": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_testscore/ft_mit_av50k_seed0_epoch_120_test"
+    },
+    {
+      "id": "ft_mit_av50k_seed1",
+      "selected": "epoch_120",
+      "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av50k_seed1/train/checkpoints/epoch_120.pt",
+      "candidates": {
+        "epoch_10": {
+          "scores": [
+            0.07227182493560949,
+            0.17803188707334205
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed1_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed1_epoch_10_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av50k_seed1/train/checkpoints/epoch_10.pt"
+        },
+        "epoch_120": {
+          "scores": [
+            0.051515698645514585,
+            0.0690916281442232
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed1_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed1_epoch_120_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av50k_seed1/train/checkpoints/epoch_120.pt"
+        },
+        "epoch_50": {
+          "scores": [
+            0.08730525484712294,
+            0.10889391859606867
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed1_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed1_epoch_50_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av50k_seed1/train/checkpoints/epoch_50.pt"
+        },
+        "last": {
+          "scores": [
+            0.09425337962259508,
+            0.12777143171610159
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed1_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed1_last_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av50k_seed1/train/checkpoints/last.pt"
+        }
+      },
+      "run": "runs_thesis_v2/ft_mit_av50k_seed1",
+      "output": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_testscore/ft_mit_av50k_seed1_epoch_120_test"
+    },
+    {
+      "id": "ft_mit_av100k_seed0",
+      "selected": "last",
+      "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av100k_seed0/train/checkpoints/last.pt",
+      "candidates": {
+        "epoch_10": {
+          "scores": [
+            0.16715945907124163,
+            0.1935084649531092
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed0_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed0_epoch_10_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av100k_seed0/train/checkpoints/epoch_10.pt"
+        },
+        "epoch_120": {
+          "scores": [
+            0.06823103158037432,
+            0.08409072042518821
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed0_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed0_epoch_120_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av100k_seed0/train/checkpoints/epoch_120.pt"
+        },
+        "epoch_50": {
+          "scores": [
+            0.09106099032448399,
+            0.08331830140133963
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed0_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed0_epoch_50_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av100k_seed0/train/checkpoints/epoch_50.pt"
+        },
+        "last": {
+          "scores": [
+            0.06160653301534224,
+            0.07303266433083704
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed0_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed0_last_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av100k_seed0/train/checkpoints/last.pt"
+        }
+      },
+      "run": "runs_thesis_v2/ft_mit_av100k_seed0",
+      "output": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_testscore/ft_mit_av100k_seed0_last_test"
+    },
+    {
+      "id": "ft_mit_av100k_seed1",
+      "selected": "epoch_120",
+      "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av100k_seed1/train/checkpoints/epoch_120.pt",
+      "candidates": {
+        "epoch_10": {
+          "scores": [
+            0.11772388340476522,
+            0.1896660860926308
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed1_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed1_epoch_10_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av100k_seed1/train/checkpoints/epoch_10.pt"
+        },
+        "epoch_120": {
+          "scores": [
+            0.0636963413585282,
+            0.08540110612849411
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed1_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed1_epoch_120_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av100k_seed1/train/checkpoints/epoch_120.pt"
+        },
+        "epoch_50": {
+          "scores": [
+            0.10426000035596626,
+            0.09951153154074
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed1_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed1_epoch_50_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av100k_seed1/train/checkpoints/epoch_50.pt"
+        },
+        "last": {
+          "scores": [
+            0.0738505074272703,
+            0.11435531795212298
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed1_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed1_last_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av100k_seed1/train/checkpoints/last.pt"
+        }
+      },
+      "run": "runs_thesis_v2/ft_mit_av100k_seed1",
+      "output": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_testscore/ft_mit_av100k_seed1_epoch_120_test"
+    },
+    {
+      "id": "r1_official_recipe_seed0",
+      "selected": "epoch_170",
+      "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/r1_official_recipe_seed0/train/checkpoints/epoch_170.pt",
+      "candidates": {
+        "epoch_10": {
+          "scores": [
+            0.09875325633345476,
+            0.24739969614643925
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed0_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed0_epoch_10_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/r1_official_recipe_seed0/train/checkpoints/epoch_10.pt"
+        },
+        "epoch_120": {
+          "scores": [
+            0.03524350918449155,
+            0.04234124639275245
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed0_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed0_epoch_120_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/r1_official_recipe_seed0/train/checkpoints/epoch_120.pt"
+        },
+        "epoch_170": {
+          "scores": [
+            0.030806608043948056,
+            0.030618262052090915
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed0_epoch_170_val/results/metrics_epoch_170/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed0_epoch_170_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/r1_official_recipe_seed0/train/checkpoints/epoch_170.pt"
+        },
+        "epoch_50": {
+          "scores": [
+            0.025904510208516786,
+            0.0486868556708399
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed0_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed0_epoch_50_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/r1_official_recipe_seed0/train/checkpoints/epoch_50.pt"
+        },
+        "last": {
+          "scores": [
+            0.039980730935920195,
+            0.05027088796540094
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed0_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed0_last_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/r1_official_recipe_seed0/train/checkpoints/last.pt"
+        }
+      },
+      "run": "paper_reproduction/r1_official_recipe_seed0",
+      "output": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_testscore/r1_official_recipe_seed0_epoch_170_test"
+    },
+    {
+      "id": "r1_official_recipe_seed1",
+      "selected": "epoch_50",
+      "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/r1_official_recipe_seed1/train/checkpoints/epoch_50.pt",
+      "candidates": {
+        "epoch_10": {
+          "scores": [
+            0.13854286299844915,
+            0.31374620250402246
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed1_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed1_epoch_10_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/r1_official_recipe_seed1/train/checkpoints/epoch_10.pt"
+        },
+        "epoch_120": {
+          "scores": [
+            0.03185248880754724,
+            0.02774071042877925
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed1_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed1_epoch_120_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/r1_official_recipe_seed1/train/checkpoints/epoch_120.pt"
+        },
+        "epoch_170": {
+          "scores": [
+            0.04494695654970828,
+            0.04311326207848023
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed1_epoch_170_val/results/metrics_epoch_170/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed1_epoch_170_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/r1_official_recipe_seed1/train/checkpoints/epoch_170.pt"
+        },
+        "epoch_50": {
+          "scores": [
+            0.029119142097306778,
+            0.028265178349745998
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed1_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed1_epoch_50_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/r1_official_recipe_seed1/train/checkpoints/epoch_50.pt"
+        },
+        "last": {
+          "scores": [
+            0.036268623167482666,
+            0.04769859966316726
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed1_last_val/results/metrics_epoch_198/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed1_last_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/r1_official_recipe_seed1/train/checkpoints/last.pt"
+        }
+      },
+      "run": "paper_reproduction/r1_official_recipe_seed1",
+      "output": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_testscore/r1_official_recipe_seed1_epoch_50_test"
+    },
+    {
+      "id": "armB_joint_avinit_seed0",
+      "selected": "epoch_120",
+      "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/armB_joint_avinit_seed0/train/checkpoints/epoch_120.pt",
+      "candidates": {
+        "epoch_10": {
+          "scores": [
+            0.11006058316859596,
+            0.10132988245846923
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed0_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed0_epoch_10_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/armB_joint_avinit_seed0/train/checkpoints/epoch_10.pt"
+        },
+        "epoch_120": {
+          "scores": [
+            0.05154076122810318,
+            0.04581841144752108
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed0_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed0_epoch_120_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/armB_joint_avinit_seed0/train/checkpoints/epoch_120.pt"
+        },
+        "epoch_50": {
+          "scores": [
+            0.08136651630254228,
+            0.08561355724288273
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed0_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed0_epoch_50_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/armB_joint_avinit_seed0/train/checkpoints/epoch_50.pt"
+        },
+        "last": {
+          "scores": [
+            0.06783497848492367,
+            0.04952088629574023
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed0_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed0_last_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/armB_joint_avinit_seed0/train/checkpoints/last.pt"
+        }
+      },
+      "run": "paper_reproduction/armB_joint_avinit_seed0",
+      "output": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_testscore/armB_joint_avinit_seed0_epoch_120_test"
+    },
+    {
+      "id": "armB_joint_avinit_seed1",
+      "selected": "epoch_50",
+      "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/armB_joint_avinit_seed1/train/checkpoints/epoch_50.pt",
+      "candidates": {
+        "epoch_10": {
+          "scores": [
+            0.11468044024245218,
+            0.11361781444853113
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed1_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed1_epoch_10_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/armB_joint_avinit_seed1/train/checkpoints/epoch_10.pt"
+        },
+        "epoch_120": {
+          "scores": [
+            0.07612987458356076,
+            0.059058425897132207
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed1_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed1_epoch_120_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/armB_joint_avinit_seed1/train/checkpoints/epoch_120.pt"
+        },
+        "epoch_50": {
+          "scores": [
+            0.05643296289099273,
+            0.057643094360578975
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed1_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed1_epoch_50_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/armB_joint_avinit_seed1/train/checkpoints/epoch_50.pt"
+        },
+        "last": {
+          "scores": [
+            0.0784585304954484,
+            0.05814792598095792
+          ],
+          "metrics": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed1_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json",
+          "config": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed1_last_val/hydra/.hydra/config.yaml",
+          "checkpoint": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/armB_joint_avinit_seed1/train/checkpoints/last.pt"
+        }
+      },
+      "run": "paper_reproduction/armB_joint_avinit_seed1",
+      "output": "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_testscore/armB_joint_avinit_seed1_epoch_50_test"
+    }
+  ],
+  "files": {
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/eval.py": "43e1f43f98c728200b6641ed0015829fe3177189310b0b3dda5eb3a2a732d403",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/evaluator.py": "7f74a003bc8bd29c8dbdd5883425007ca232688eb7c3764c570916112117841a",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/train.py": "814c63ecdb719208ac07ca1cb302371d533f15c09f00428871bb63875b3fc8b2",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/trainer.py": "40ac50e8cebad95912efa2220f61c59344b2e60bf4d577043621dc9e505ce020",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/callbacks/model_checkpoint.py": "c367db2a9f7003d5c73c42cd4f3dce5432441a563adbace0c118f89b5a34aa33",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/data/unified_datamodule.py": "678da36479977f11fe3d6a4eef69873dddbbc7a4531e6bfb5115430882470796",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/data/components/collator.py": "5912c297f7cad5134d61500d8f7793915bf5e95f8497e3ed0693e45561225461",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/data/components/onthefly_features.py": "0296cc9a23a9261996c4ce3b7abf41e27cfdb68e54c70182ca51b93937016751",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/data/components/coco_freeview/coco_freeview.py": "a52d67a4eb61a0bd1a1ce04c0deabb9cd7d9692839923e156f4324b24df7426b",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/data/components/coco_freeview/feature_extraction.py": "dfde02c859af3f8c5db0ae573f150059b93012f35e489d386d42f76879cd8656",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/data/components/coco_freeview/preprocess_COCOFREEVIEW_clusters.py": "e4df8c540e585a6ced4522622120b82b900c4bd4c8ded1fa847f1357346ba695",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/data/components/cocosearch18/cocosearch18_ta.py": "6570c18379d92a22a5e5f6093e67525d6ac1337531caf23fde2307fd09932cda",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/data/components/cocosearch18/cocosearch18_tp.py": "12b74b7cdc28e8469c71a38c72cb162b940f8928186c0ca3f39aad3eefa003a0",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/data/components/cocosearch18/feature_extraction.py": "11c43d12b8ace8722abb5334be15f1b76e754bf78b6ecc582c7eeb4c554e93c7",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/data/components/cocosearch18/preprocess_COCO_TA_clusters.py": "0afb2476b93f10dcbc955a54090cd01f7fe3d38523e2a5a559772558f1b55aa3",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/data/components/cocosearch18/preprocess_COCO_TP_clusters.py": "6f2cb9c1bcc29dc5eaa6b3728431ee07a212fc68b2017b6e52573dfd274dd999",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/data/components/mit1003/feature_extraction.py": "8983cf75f78bc9c3dc478df938457cd22e57857a07575353d2d3e4491bd7819d",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/data/components/mit1003/mit1003.py": "8553ce8bfe598374fa0fed5b797b86ff6f718b0f96ef25d8abbe7ae00077fa55",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/data/components/mit1003/preprocess_MIT1003_clusters.py": "2dfbcae36bd765ba91af95f91cb353d0faf69373cbb12f1923e3a0c4809cedd4",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/data/components/osie/feature_extraction.py": "b73dd3e52aa018d6c4ec8fc6e4da9f27de4cdde289ae757e752850774c658127",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/data/components/osie/osie.py": "07e5cee49268a2ae613afdd46713b7101aaa25596dca6ea4ed26520d080d5a29",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/data/components/osie/preprocess_OSIE_clusters.py": "ec90dc480b14b30d8470ecf8773c5cc78fdafc20ef5a41740974d79a563a4bb5",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/gazetools/__init__.py": "88254048a72ecbc4a3ac8fef039ae10766cac8e3aeec24271973cf52641558d0",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/gazetools/density.py": "3b75bf01ca8cd8a0f98d076eb9dbec4da49fb82cb7ec6ca60827b5f98335a60b",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/gazetools/display.py": "954d649d4792926bb4017c00e54461068374f6e865596111e4f596e8b2e5b0e6",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/gazetools/utils.py": "c0654af05fc0b7d23eda4f89fed308e475f49c2133ae6668b8e8a1044fe5306d",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/gazetools/metrics/__init__.py": "a0443485bf37fd437ff6f9cb1dc1ff0d2d6127eb4f2a965ff870dcf281a0192a",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/gazetools/metrics/kld.py": "9019e1a83f93f13419246f29af2655d90335fdd3c385699a2499551cbbe6e7ef",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/gazetools/metrics/multimatch.py": "43dbd60bbcab6e3b1fe7697c462c9f7d4e7e63e0e9237d275318564d4b15c3dd",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/gazetools/metrics/run_metrics.py": "e7832c7d835baba6d8d44d334959dff2ad720323d01155ddf748218deca4a65a",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/gazetools/metrics/saliency.py": "9175e22688a6c6722881623b0ebcbd43f0db9436d512198e3aa330d0ff4863fa",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/gazetools/metrics/scanmatch.py": "5959d6102d22fa25176da6779a53d0a484416c4c2cb74bf94087805d638754df",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/gazetools/metrics/sequence_score.py": "ea778795eb353784dbee5a27faf0d2c717a60ccd777d399884a8c22ff31aa500",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/gazetools/metrics/string_edit_distance.py": "daa974c953024ebd8abad25a124f3e9a4da6649687591a31181ebdb2746760c8",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/gazetools/metrics/visual_attention_metrics.py": "e1b5136c9789aee67a948f56707abfc7877f22e4d7f2e750396b91ccbb2f1ee1",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/logging/wandb_logger.py": "b7fce2527a714e9a578de77fafcec2473583f5f51d7ce214fe6bba6b8a53f93b",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/model/components/autoencoder.py": "360c938a0eaefc3ac81811817e88026078eacaa8e37b84204e1cd28f4ecc555c",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/model/components/dit_model.py": "f71c1e101453e13fbedfe3f7dcb6590a89b57334f00eeeaaa9bc2d1a3e43b932",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/model/components/gaussian_diffusion.py": "850775e9ec8263ccad445cbd792eea8e9ee7fd10978e09a38f49febaa882b2b8",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/model/components/img_text_projector.py": "6b28825271aa29a54225eeeb3ed97a05f8d9c80c0b2fcbc8ad4d7f149ad65f3c",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/model/components/model.py": "6e71e321297f9d8dd4ab0a29d9a5e3f50ece3da621a9c78dda26d7c22ab2cb27",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/model/components/respace.py": "4b3eddd7589dbbbba39c7349d1fc0588cae8f19aeaa6bc6b84067e5b7c5c8dc4",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/model/components/step_sample.py": "066dd82760a69ba71f790c2ecc275e38c637d8881747ac0991a17a7deff27cd4",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/model/components/text_feature_extractor.py": "0021a434eab514bbbc0915e589d9980f166e9a9fad25e907d4cbb0c74571e960",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/model/components/time_embedding.py": "1b6be50a343bd62867f309b4ac17086419ac87ab12059281a1d468e50e38d32e",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/model/components/diffusion_classes/custom_gaussian_diffusion.py": "4703eb29704f0485b32ace07eed1b015da629ed85b7144e6ab8a5754d1399ec7",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/utils/basic_utils.py": "8730466bba2b3819b2f1386d235202e12f25a182acde36c3aea3da20ae5bb039",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/utils/create_diffusion.py": "3eb2248a9887c535ab785b710681f2e083e8204b27784f0cb780f251c967b37d",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/utils/diffusion_utils.py": "298505447a4bb5be447a9523f0e47df4200adb2ed27923296fc75f1591cb1778",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/utils/instantiators.py": "a757ad0d7be0389bc72dfd8d0b7e1b0e4c5cfd27f29c68abc85b5e4364b5cdab",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/utils/logging_utils.py": "09c82a98ef1c0124d500b5996daa1c37df24cc88344ac1ce6060dfaf94371f61",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/utils/losses.py": "89d40ae591723f44fa9ff967a3b2fac2fe1fb8ac7cee3c2d8c0637dc2d006c9f",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/utils/nn.py": "08f21308cd1e522b46db567e5aea313fb019f0af5e22ffce82a52b3f4bb3352d",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/utils/positional_encodings.py": "7475a3ceefde1714e209adbe40f93de96218865219e5cee869cb3e83c4b3a7f2",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/utils/pylogger.py": "f2167767608796d38dfc9fb71f56e92a3c46a364f625c76189e9bd2e408fc451",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/utils/rich_utils.py": "25cfb050f9c844916bad778e42d5fe2d19420a82e2267494c87ce1f50f27e88d",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/utils/test_utils.py": "366c1190a2e4c7253fc5790eb934fe9fdae80e9d852546a4edee345070844615",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/utils/train_utils.py": "309d34ef57d3ddd6f3ec4a59ed4b87eacf7eb584040b4befc46b3b11d56220e4",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/src/utils/utils.py": "626dffce7d4b1e374dfd9ec1418b0c95951730b37f10d267f8e061b4b1632f0f",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/demo.yaml": "a22c00ac6cab0622499c011e0b926d49811f1315f85f744ba6c435de570874e2",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/eval.yaml": "9092124da61e6c67564e27e0086c0b32f44d68659c086bb8da284ac450b9dbf0",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/train.yaml": "2a9d7bc3c92033eed0b9410d573db08eccfbacf1232d7e40fce23e35a0c1ec63",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/callbacks/default.yaml": "ef793183e278aecfc50161a6cc98832d64b77aee14856b53b207000cf84503a5",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/callbacks/early_stopping.yaml": "eaa2644c4baed348e3dbf6c4c64a41d974756487fdd2f4e696621c1e9e1468b8",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/callbacks/model_checkpoint.yaml": "1612e505728f9b4a20dd0c4bbaf8136066904b253f471cba952a2e981234fe3d",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/callbacks/model_summary.yaml": "7c62f89ae537575f2f22aa2c646710c00105b14d38b6d5313f42dd631607788d",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/callbacks/none.yaml": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/callbacks/rich_progress_bar.yaml": "922ed36015c64efc9442be737a3eeec0f15589a82fa8d3953c4f800fcb5c6d83",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/unified_datamodule.yaml": "f7687dd3d4c7b87788e5ee470046f574b879b35e06eee6f57fb0c409a15282e6",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_collators/default.yaml": "e05a7049ab485068f08ae2711f2da303c395850c0484e622ed49834996543d1e",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/coco_freeview.yaml": "24f8479571a08eed50bd723166ada1017f35f4c4e931f63c71db2e8bec808c13",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/cocosearch18_ta.yaml": "1535d9ac61f17fa46925e5973078fa7e679a522bee1a964516590ee09179354a",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/cocosearch18_tp.yaml": "c3e9757a66e4e03758232a8d319b17e83db06155680507eb31ea919a8491b89e",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/mit1003.yaml": "7537eab00b479a44f25f152581c5724f5a9a94b7d438eab2a82096b60812ac56",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/mit1003_100.yaml": "8981a5e3c1b9e6f38385a1c0edd27676b25097e9d2cec7bd321cb89e8102347e",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/mit1003_fold1.yaml": "942ab7afaa7612424c8ae9e2fcc68affe73138eff94a4a55032a4909ca52b096",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/mit1003_fold2.yaml": "9bdda74ee08957f605abfd046c40b1536adcc6346d3db2e52ec49ccd5d57762d",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/mit1003_fold3.yaml": "fbc0d4aad2a4aa9ead0907cddedf90dd12de7c8130081d600f3456f30e0dd2a7",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/mit1003_t90.yaml": "34f94be255e73d36265a4ba63851c1eb6a6ac3c6a60b8580c4ed103941e00e2e",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/osie.yaml": "0fc8ed519ebe313092789717e2edc17785d556df77d6988d0cb13b569c1f43bb",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/oursynth.yaml": "db682211ab348f981ff7c11de01bf61f54940ae228fb9425b75a8a704182f4e4",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/oursynth_100k.yaml": "bf15001b25757e508a9a06305996ec758cf55e39616636defc9aba6e125a16b3",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/oursynth_100k_valsplit.yaml": "fd360c50378e202b493586cee5a5e9412abc6be46a040aaf74eeafa6809d3039",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/oursynth_10k.yaml": "61ea3dca18738db58f3afcac3dabbc13dbaf28f4b4812bf7cf67ff5d3759bd26",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/oursynth_10k_avcrop.yaml": "983e63b08bf91e248f526f65e1bd80f626382129d3f4e432e6a80bd107dddfba",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/oursynth_10k_v2.yaml": "10d4b5826ec08c6689044f7b6713aecfc0dd2b5f3d091b24a1398ca56cd5e1be",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/oursynth_10k_v2_avcrop.yaml": "60c171f70c9d16ee35f09927cd79816f9ee43adf19d58b6ff911465d1d0986bf",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/oursynth_1k.yaml": "24fc1903e38d022cc92f9aae76e21b1f69490d4023ee2306d86393a433d31802",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/oursynth_200k.yaml": "ddea8db73f8a617dabefb09c27e15c8586f95ca8da4a60c6a5c995f7a69dcf37",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/oursynth_50k.yaml": "9af7de8c347b41002a2246f8858681685c4f4161efc2c59fdc0c0a70ee10fbab",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/oursynth_v1_100k.yaml": "7af3d11663720820beb14581bfe12949b250898ea2fb466097985166d8af9384",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/oursynth_v1_10k.yaml": "e425d1d6f78c663399f221d036f8e9af0554e760641401934d23530c4a2476c9",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/oursynth_v1_1k.yaml": "ca70b6f454028bd9e921041436e96d320c164aab0879edc2340e07a41ecf6622",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/oursynth_v1_200k.yaml": "3248d9793c3e0abae3116126a7ff9dac88a01d803466e412260638abdf7b3242",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/oursynth_v1_50k.yaml": "52e9c560906b301d39788ca7ee43ad81e5943dd94b944a40b749ea91d15b7208",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/oursynth_v2_100k.yaml": "1894ebbc1de8dcd52b499fa9543df099779ade9c81b4ae51f573b43c55116291",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/oursynth_v2_10k.yaml": "1ca7d15ff8d9c40a21ada959b1b2c20ec7e6a04eb484bab0c016de1589ed3203",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/oursynth_v2_1k.yaml": "cb8594f2409fb68731209bc222b72984cc0cb8fcd7d8bdd54181f1fa9b1d6836",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/oursynth_v2_200k.yaml": "9eef25f8cba587fae8e5749d97121541da4a96b57fd1ebaa1d932152ec9b7fcc",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/oursynth_v2_50k.yaml": "3a77f969a9fc70151280ed30041d65836b1d988e0a37c9fe9910ea7510bcf2e2",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/test_datasets/oursynth_v2_sub400.yaml": "ea8baaf6c5353d8f39f320297f94e0a291e5c1e5bf13b1d7eadb96470bc966fa",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_collators/default.yaml": "e05a7049ab485068f08ae2711f2da303c395850c0484e622ed49834996543d1e",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/coco_freeview.yaml": "b77db84e6e44b8fb04684910649569e6ff7fd1fe583da35509c153861ea2e885",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/cocosearch18_ta.yaml": "e0d84bf392b24a9ce5606def4297e1e0a93d327bbb750b8eddd90aa87ba07bfd",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/cocosearch18_tp.yaml": "ac2e271b6d6722bac75467afe9693e164ae7cbace7d3d163ac49d79b6afe73ab",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/mit1003.yaml": "bfa528435cc7c26db7a6bd6f3b78cd4b5077171be13e64461d9915c645383026",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/mit1003_fold1.yaml": "1d8d07297a3eae7fd856f0cbf2111ef019a2a6e247b225939673b0814d4f8cef",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/mit1003_fold2.yaml": "acb4136752428a2c45578f54e8249fb5e24be83fa22cab213dd4fe92fd21d341",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/mit1003_fold3.yaml": "fbaf6e169037aa6ea6390b1cea458a47b0d2c9a0467cebeaec65bc7d6fbcc575",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/mit1003_t90.yaml": "37a506d89711f5743e5ea9057eae44f73ba07d1941238c76073dc42131da292f",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/osie.yaml": "6baeb28f5b838e33910f6a22772f0f4df2ff716e2318a10baa69d4b65eb6b564",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/oursynth.yaml": "4fd5829ee1040d05a2be39384d02eb5206aaf706ae8fdf8f3d380e1eb3c9e008",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/oursynth_100k.yaml": "189c88bc1e9cde91b54f3dc4ef02698eda7d6313a66f704157d159540c008688",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/oursynth_10k.yaml": "6453edcdc2f1aa179be2997c87c89879a8e9ecf268ae5c7870198599fef119e6",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/oursynth_10k_avcrop.yaml": "c8f1e4778fd4cffbb785dfe97f7ffeefb785425491068b61a18d2ff6cb612956",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/oursynth_10k_v2.yaml": "61187c892c7dc14a20c88d04fab35d734ec8cd708facab760fdddcde31ab2ca8",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/oursynth_10k_v2_avcrop.yaml": "fbb038122b8944839a49e0e9e2c1a215fecf1c63d0fd3f75b9ae377053fa9a3f",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/oursynth_1k.yaml": "d0efd5dd509379de02f3f751d0db57fc27127201bff9be66c5f72dfa12030cf5",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/oursynth_200k.yaml": "2a638228e163c89498b68345cc6255754921d6f142343abefbb44b2182dbb24a",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/oursynth_50k.yaml": "5612f4a0508dd2f2ca4f4bade5737bdc06318718353727c26c640e5333c3d3bb",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/oursynth_v1_100k.yaml": "c34094eb6f7ea3fb4e09153fb29a14b55626d4b93d5a790fda95f29393dda224",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/oursynth_v1_10k.yaml": "0c4d978c4e35d1b92b0329ee60ba52ae62df435644cc8a7e2860b41114037002",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/oursynth_v1_1k.yaml": "aa4ac5c51fa91f919e38b1e76b22f5136c40f4ee6140a28b7b259bc4f13a410f",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/oursynth_v1_200k.yaml": "4d5fbba2ba2a6fdda917e02ac5f4575d701be32601f8d8b918ec973566b94508",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/oursynth_v1_50k.yaml": "b9ab174cab318c957db095950c172c9096e7044bdd702a37618c0c6f9a7d8b42",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/oursynth_v2_100k.yaml": "893515d4c4b02c14f1544891a57701a590df5acace55dea6f9134080455063bc",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/oursynth_v2_10k.yaml": "d3b9819e752962c263925f078e2b7a5471a005090c5f66c8fa55cce8917523a0",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/oursynth_v2_1k.yaml": "1995de4b976c3d02194d44cb52493b2a8bd1796170301932cc25fd150b9961ed",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/oursynth_v2_200k.yaml": "651c234e567ccb989fec15528eae37a1a578f016b0073d1c34f86084f0bd2415",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/oursynth_v2_50k.yaml": "22feb17f2254dcbf15925fd3a803146724cc44092681a6557bc33e123f475b2b",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/train_datasets/oursynth_v2_sub400.yaml": "358b1026d53f73f254cd5ec62cc89d895ea6f64306b10c6312094c412f489d34",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_collators/default.yaml": "e05a7049ab485068f08ae2711f2da303c395850c0484e622ed49834996543d1e",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/coco_freeview.yaml": "def6a357222d02d9f3807ae4d1c7dbbc119a547ed5784c8983232539639ed3d1",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/cocosearch18_tp.yaml": "61e42b2e7b3ad2cb5c507df3502ff9dc7fee21cd3706fb86054fa15b0be23666",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/mit1003.yaml": "4e39c5308ea90d4966b2b43cea446e532da002606efeeefaff398ee3d83498f5",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/mit1003_100.yaml": "b27c3fbcecf23dc333d55e33645a53ea160512ac2f72a99bf6ed674f5f78f4c8",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/mit1003_fold1.yaml": "8be1a9d3b62ea7ea2e7c405f5f455a1232034c9a2d33dc6a8423863edaacc2d7",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/mit1003_fold2.yaml": "bf033f6742d34b365bccb7b8d43fdbfaa777e62c4e444dd8cd24931053fb3f0d",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/mit1003_fold3.yaml": "f30108f7a270ab30cb462e864fcc01945bddebffedc43694a81f050816d923d7",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/mit1003_t90.yaml": "05ed3212df5a3857c6a1a2efab12fb60c02d58f3c35516f1eba0466a0f108878",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/oursynth.yaml": "c2bfc2d2892284a9598dafb74135e016fac9af8ee06b6d5ea2da991b6d39dc0c",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/oursynth_100k.yaml": "b7b04811fa6293d9d2313895d5c255f906998914752d74f45da2d4189625d641",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/oursynth_10k.yaml": "de1b2c0f33271bab1d6b37171560fffd3408cf839c9dbd03e71a082163f7b59f",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/oursynth_10k_avcrop.yaml": "5d17d00c8e8db9a9fa42d00d5d84ab4f1fd1025a3ff2ce3439abdbbec7d19763",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/oursynth_10k_v2.yaml": "49f7223068fbac553e6fe0a39259071b4727651a9dbb9d1f0343bc1b1f81300b",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/oursynth_10k_v2_avcrop.yaml": "d1c7e4cc5146bb61a37735d935198ef6417610ca4ee62508fe4f528d0e7fe945",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/oursynth_1k.yaml": "61f517d1ee2d9f91d8f28c18870d08242697ec4ef511d3af605008f736397a51",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/oursynth_200k.yaml": "7b2290d1ebab49659e0469441046ded1c912b9bca578f4bba93123a7027fa1ab",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/oursynth_50k.yaml": "3103cfa3199220f209e45eafaf7a5901e0cff07565a2a2c636f9a0a57eff603d",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/oursynth_v1_100k.yaml": "1c80d34691084c20e99dd90c2e2ef2180b375ddd3fdef7025ac38c9c24631f0f",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/oursynth_v1_10k.yaml": "cf22f587a7bcacacb0f6434826b10d5fa642e19a14941269ea55adbb7c02f132",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/oursynth_v1_1k.yaml": "1734804504e2137ec92611cd678948005fc59c90b00475695cd707d209eb4cd7",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/oursynth_v1_200k.yaml": "4bd934cb23736d1466816992f84ee6cd3c778f8d45373a626912a5160cce803a",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/oursynth_v1_50k.yaml": "6cfcc2daf3f13b6fbb3ce87455771275078f3da6928c63f8814ddab2c3fc38db",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/oursynth_v2_100k.yaml": "313f7bbc8ebfe65b9a574828669d01e9501808ce18e0b122cf66e2c81b1288b8",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/oursynth_v2_10k.yaml": "5fd85047ffdb82c8d025b07fd1d46181c87abbb337e4cca4259a63d164dc01eb",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/oursynth_v2_1k.yaml": "d0412bef9b29137b637e6b93c94ca976feb360ce9943c8ae69f7c1ebc4a4ad2f",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/oursynth_v2_200k.yaml": "77516f9cbc1a167a9b6484ffab17d00a094b84e30a072e0260208a7c3c52bc11",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/oursynth_v2_50k.yaml": "44154180ed6a1cc8b7f7a86253b8f5cbaf8d26a02dd3ceaf4975fb0a5a0f3d2f",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/data/val_datasets/oursynth_v2_sub400.yaml": "a2db453856396e898e570dd34b9deaff88101357951be20ba7e66766d436db58",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/debug/default.yaml": "e291292c525b43393884fb337e3e587702156982d4838f49afa3c7b7e7d641d7",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/debug/fdr.yaml": "a05cf9a9593ca08ffab1b543685cacd463c354f31de60533e5dfd6f520c0cde6",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/debug/limit.yaml": "a93d73f3b05eed740ed9836b3748e6837c4d7c8f2379dc949190a3d816e695f3",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/debug/overfit.yaml": "5f4028eb494a2b5da577643947e16792fac228fca41e0166e25fbfb35e1446d5",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/debug/profiler.yaml": "825484a7a143b1291ffded8f86defe100ac142fba63417ff4d3552cd6daffbe4",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/diffusion/default.yaml": "6f9152f477dc92ab8368112352a5a6953616ba9bcd8e0074d0ce2647f4359278",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/diffusion_class/spaced_diffusion.yaml": "8960bcb537d851fb3ada137c7af9df93c9be8300a2b7812ef4be3650a1608bb2",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/evaluation/default.yaml": "2af33bb201409cd7f9e28aea1c6944a6ef9d15c72686cf3d40e6ba825d710ccb",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/extras/default.yaml": "7bb741898d2bfd2532f120bbf61e64d9edbf2becb4caaa5721a412398b13ab95",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/hydra/default.yaml": "c82b4bfd028e22f1b73d83deb150cd0602fc14e812232331eb9c30b8d86dc0a9",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/logger/aim.yaml": "75aea5c99390eb86eeb05c433ded8ef91a2a7a3e6985a62b9d235645613f1d70",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/logger/comet.yaml": "4e46471685f47b238fcf3454a5a9b4bc735c75723d305e96cfcca2f4c0f75d17",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/logger/csv.yaml": "5b1e2adffa494db168354d211ba0cb120738f7acc8d8d9b718727b98863be9d7",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/logger/many_loggers.yaml": "988ed420737b95b2464ecd03f213349796bc5f914a413249507f3a5425323399",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/logger/mlflow.yaml": "d69cb36f98e92d4c5b71032ab45bb5c9b8ab9e7045f35b80a98ac345ef5f2f4b",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/logger/neptune.yaml": "59a9229d946b3dedb23bfa386ff780cc09f84fd9cc55b35dcda0eff539112dec",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/logger/tensorboard.yaml": "132b8babe6a3f25dc12a08c80448425094655b3f7e2e4e4cb4968902e8d5bd08",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/logger/wandb.yaml": "c9c9ec678b6bbb89220cc3b37a80cf319df331137134b738f5271bd5c5f72180",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/model/dit.yaml": "ed944e90a72d9da016d0b08dfff6977638608b9721d7b72782b024a8835cbe1b",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/paths/default.yaml": "ab7fdffe2814b4901e2f7abb685348248806d5736e7833951e153dbb4ae7f5b3",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/slurm/default.yaml": "4033d65281429e78f56d08fc9a1d454fc5e7d1d4dca843e30579d8e828534d08",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/trainer/autoencoder.yaml": "efb70455f69ff93459c7a79157481cd655c44a675a19b4e3c82d11c6e17bdcd5",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/trainer/cpu.yaml": "a950dc7be102e3b03b60b0078578c19e17459715d78dd5acb73b15cfa57e1fee",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/trainer/ddp.yaml": "e942956f25ee84ac251efcd26c735da2ee73d53f85e94d4573ceffb269ec0920",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/trainer/ddp_sim.yaml": "23df9283e6381b2021ad1e5a607e1e30984f7b616a85b1fc8e950e327e5a5962",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/trainer/default.yaml": "8a5651ce22e5353e26575a24b7fc6fda4afbc463494118408cf5dcc6ba917f59",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/trainer/gpu.yaml": "20df1c69370d54532d056683b4538072d1770dd95fa9d67d2329c0832eba8084",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/configs/trainer/mps.yaml": "0e844d85640842e70222a5fcc2c6ea52fc1d9ff0fbb6fa8d64b8c9bf9e730bea",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/scripts/frozen_scandiff_transfer.py": "d2c020953fa65cb3e76249247554768606cc64e4a00795a024b3352e4b01fda6",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/slurm/score_ft_valsplit.sh": "ac39065d23d114ab0a8cfbe1e94cb3c2c0012c6e0f38571d63b225048e3e5140",
+    "/mnt/vast-nhr/home/tomcosmo.fischer/u27846/repos/fixation-prediction/slurm/frozen_scandiff_transfer.sbatch": "dbc5cad2bf55b0eada0e808d3700219cb687f29c56ecaf66d4902f62c440ef9d",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/task_embeddings.npy": "831ca726ff8c192cd1cca37140f0c746d5acb61e88aa8b9f838bf26240e8281f",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed0_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json": "f044aa94c23b2efa319b19cab40c7f2b3a088d0b53f36fc481092e570ebd25b1",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed0_epoch_10_val/hydra/.hydra/config.yaml": "7dd49d5cb170b0fc680e82709f330842df34317b5b0377e587a0960d357626de",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed0_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json": "6c3ba3235d17f47d2d51175879914f6a8282098e6a42833dd071707a5df29401",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed0_epoch_120_val/hydra/.hydra/config.yaml": "52e953bbce38673a462261c3eb72b801ea36fd997a959434121826c8886ace21",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed0_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json": "18320daad2aac972996049d53e6dab683c7df4f0b86dda0159850673d8da9f9d",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed0_epoch_50_val/hydra/.hydra/config.yaml": "11f9483a9e63dcb39444778671d282b6bedf26eeaa461aec4a915392b91d22cb",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed0_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json": "382d4a71c39d88a6beef12800f856f71336557f18be3b08aa212666819086b66",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed0_last_val/hydra/.hydra/config.yaml": "1851d577e1eb4e67b136cad9807a080f6244c73f274708c0d0b5f2f84e1e54ae",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_scratch_seed0/train/checkpoints/last.pt": "359db8e4579706fadc0d692558ff08bc1cbba40e81ea0c7c5c91773e2a61dc19",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed1_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json": "2a80dc9972e84cbc87b58c67fc3359531da56f9e31b9373d2eb214004094db48",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed1_epoch_10_val/hydra/.hydra/config.yaml": "e9f9fdad9fa758a466d395539d3a0a124695802de6ded85cbbf55f6a74779737",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed1_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json": "495f73f7fa44a79eb8812ae364e8b46a4e61f33b59c15ff84b15c5fbacc0d941",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed1_epoch_120_val/hydra/.hydra/config.yaml": "6d983eb6bacee0e131d34ccc6c42fac8b61c175a732b0a39fd339dea7e2e063e",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed1_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json": "3a2dcb5e293c303238a3a2f47272c72cff16dacab41b1d3e079c77f612e13a66",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed1_epoch_50_val/hydra/.hydra/config.yaml": "9430a4a777e356471a7f4b9eb0329e355501a450a8f020fae737df7bc0433771",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed1_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json": "80e018a3f4fcca70d26592c081b6ef9249a34fb5d58c8c7f69bf095664725e78",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_scratch_seed1_last_val/hydra/.hydra/config.yaml": "04012bdf1bad5efb6d89be2bec711c0f973b443a7ee195430bff05196717e9ea",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_scratch_seed1/train/checkpoints/last.pt": "9e8b5c3601dd1b0a8932962d1a8164d66cc52128805091dca33aa7b303a5793b",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed0_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json": "84b9c48a0d5879eae2452ffd64f9832b01823ebfb86a92b2a266a59d80d7a6b8",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed0_epoch_10_val/hydra/.hydra/config.yaml": "229ff362c224576a041ae6b62ecfead8d7793cd9a89283018fd82b82e94314ff",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed0_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json": "e235f4d0952a6e581233eb1ea46445148d6f0fdab63d2541e8c889bc9f0cbec1",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed0_epoch_120_val/hydra/.hydra/config.yaml": "9857a5f1c7a06bd246f91d337322797dbd79d1b1612dbe1d0a48d52823bc8d15",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed0_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json": "a0f55a8f4b92d721cad88bfc0cece0ef8e0db020f53a1a58ed28b47fa7123358",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed0_epoch_50_val/hydra/.hydra/config.yaml": "c342edbbc4bd1ac8b4104dc4a2e390b8764cc18071f9ceddc346cec5cd085a2a",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed0_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json": "80accebde5f743ce1fb337fee31e4adfb91e97f1e6e2e4d333d585b8fafe0947",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed0_last_val/hydra/.hydra/config.yaml": "8f54f1c75a7c0d7c99bf8dc4265996a9ff7ae074f15f5308f38296aabf7fd5c8",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av1k_seed0/train/checkpoints/last.pt": "854b82e06c484215fcecfbd0f8e6ebc51ee04b8cb0f8479e31d9c9334d28ba0c",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed1_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json": "00971f91fe367e87824a5d6cca75ccf20ace56cd51878fccbed3cf92655bdc98",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed1_epoch_10_val/hydra/.hydra/config.yaml": "13a1e751c8f9207120c69e1fbe418e22264eaf74e344d2e9ba52f30e9f7a6240",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed1_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json": "bb9fadcb48121fe3a5ebf00e792f95c1b79361a818908ccc2d8ff1d88ad815f7",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed1_epoch_120_val/hydra/.hydra/config.yaml": "a55f6ec7006696032720002aa09e77c03024d3e7c171e5bc0aec6e1eb7e33ce0",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed1_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json": "79c9b752d78197c911095968d73a881e21c68ddc67ec3bcbf549e0f43ad192af",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed1_epoch_50_val/hydra/.hydra/config.yaml": "8ca33dc8d413984ace424fb1c712b2fdf963b08a626db68526ae834896300088",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed1_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json": "d0e8e1839a814cd0dc0a7f52d6e2810f1d9b9568b4736ee9fbe0590030832115",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av1k_seed1_last_val/hydra/.hydra/config.yaml": "8336be42bcd43a87d791f93cba6255ae660c8827f3af6f3eb38d989f03beaf1f",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av1k_seed1/train/checkpoints/last.pt": "0e203a81de9fd49389f2011f6aad1f3b02f217316d88ae343bdcaf000fcc8a27",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed0_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json": "110d87d86da5856ce34d961aa22772aa3dcd5d87d43b843181a44da27cbbee3b",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed0_epoch_10_val/hydra/.hydra/config.yaml": "7dc0fe2687fc92bf63463817911681a626f076989305051912cbf2f72f9b6b74",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed0_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json": "69e31f806c2fa9043bab68c39f709962bd931807d86efdd6eb73f3cbf144b237",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed0_epoch_120_val/hydra/.hydra/config.yaml": "f06abe87f7a9723d7bc94d046636ed60c15409b0f2bac9a691bef8596219a0fb",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed0_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json": "864031609b421c8a3da769a8d74d73201b06d43abdf16ff7fb42e410b677f5a8",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed0_epoch_50_val/hydra/.hydra/config.yaml": "87171d4c0f3b8b2d4b1b74095dbb6f260fc7cac80368af8cb0cd600fde0eec48",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed0_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json": "d4988d4d5ddd473d1d04e7db684c7ea0772a894123aa22b7c2be5033f823842f",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed0_last_val/hydra/.hydra/config.yaml": "d2fc5428fb132cdff6ce33c07e071b69c4e3145720ac4ca39b5aeb37d5076158",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av10k_seed0/train/checkpoints/epoch_50.pt": "c0f8d09ff05042b1aa25eaedaab7d1601239ca518db6385a36cbfda2b6e5d748",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed1_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json": "1d9e51df32238ee2a3962cabce277b9520353d7526bac8f473add56a7f5a7bf8",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed1_epoch_10_val/hydra/.hydra/config.yaml": "169def8a0f51224ce6966cbea7376820c09b0ffcbbdd0b38b2c209c3c49f1b6f",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed1_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json": "6b0ab07057f72e3f14727152bdfe2b766f63e14f17d864dac9aebd1dec7a0194",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed1_epoch_120_val/hydra/.hydra/config.yaml": "7eb76828d5c3a0682293603cb9ee940ebe179748d5c85fba4edc97c8e4d81fde",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed1_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json": "a8cfbda8f2708660f4e5c3cd0cff832914ee53eb139be09b6bec5350ff8eb39a",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed1_epoch_50_val/hydra/.hydra/config.yaml": "5c9e408d20d47309d55579f65c38f140fbb71541a0b72100ad985616498933d9",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed1_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json": "32aa4b429edfc11231b3a7b5ee1088e89ebe5b4bacf5e4bcd9945df4b37e3a8d",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av10k_seed1_last_val/hydra/.hydra/config.yaml": "83fb972a35dcd773fe36beaa50407d51bfb7eb315753657b5bff2698fa0b49dc",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av10k_seed1/train/checkpoints/epoch_120.pt": "7c7df180449f49a0e0bf0c778b25238e558bd8d8e54e67dcc995998039a0075b",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed0_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json": "aa2c92b17aeab802f805fd2c6986187dd98f984c543fa3c099bc70e559ce4a9c",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed0_epoch_10_val/hydra/.hydra/config.yaml": "0d5d572e2f739486c6952ee7de4de3a479fdc92491026ce088d025d758905b95",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed0_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json": "f17f76376473cef0924ffb712f53190f3e25da4375c971b53ff1950093ff579b",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed0_epoch_120_val/hydra/.hydra/config.yaml": "a96eaff6536e1a0c204b8bb450a67f1708753390a33c62f66a8f42b0066bba80",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed0_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json": "0f89ee38d7c799c3786148fb7d2df23aac6909072cb65b3ae22b92ac48446b24",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed0_epoch_50_val/hydra/.hydra/config.yaml": "a86a8bd58a750d91a1f7080948d1f2242c20215e939da994464c7083058f1fc5",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed0_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json": "5415d649aff8aed99edbbf5b4924714788e5d0d5d3e6981399fdc387d11e411e",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed0_last_val/hydra/.hydra/config.yaml": "db113d8bfce6c8e395d176edd4db5db7deed39d38ae9373bb3018f5e09baa6f1",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av50k_seed0/train/checkpoints/epoch_120.pt": "7e165cbf5ba3981438517a17e74800024b9fc57fc3812aa9cc51490321c629eb",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed1_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json": "f667e05d7ebb1769e274adafaf5a89797f90e19c0839d2baba8d07c44e8c74b8",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed1_epoch_10_val/hydra/.hydra/config.yaml": "9f885b47cbc78e424c0d86b4e39cf1d8fee23b7f22717a52c826e85e368e53a7",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed1_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json": "28445d1ab3b890a32b63e4c00675d4df1d84d56c4cb0aec695c90416655d92d4",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed1_epoch_120_val/hydra/.hydra/config.yaml": "dbd621247cb13f4826da71e05a9a4796546023d8c9df234bf64dceec882ddbc7",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed1_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json": "6d5b1d4c320e3a8f9aa2d0f7e7ee339fa7c8683755e8225c338b2796fcc84057",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed1_epoch_50_val/hydra/.hydra/config.yaml": "efde77c2b1f34187e4dce9c7b70e67775e4a5c47e3e441be86220527a7ab224f",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed1_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json": "939518df56499b69d523af29c8de698d7cc036844917838e615062f1c6cfa5d8",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av50k_seed1_last_val/hydra/.hydra/config.yaml": "643215abcf0b6a5b747029b4282e873fd56441b00ba4f094743a62bf2199fcf6",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av50k_seed1/train/checkpoints/epoch_120.pt": "dd154f2ad876a2563d277792d3c163bcca0102622c54ed491bc7dbd7ac673207",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed0_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json": "6da43969de604399881e2b092f1ccff7fb29d3231835faa47a350034825f2611",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed0_epoch_10_val/hydra/.hydra/config.yaml": "63b0b695ada258269d45fa0e2cf9251f9e77ba1af0367d65c4b4ce5ddfdabfc3",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed0_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json": "9d0efc7326095b597d19d8f029498328ce47bcf0477b47e2da357b0b94a0b021",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed0_epoch_120_val/hydra/.hydra/config.yaml": "7fc8a436ce141e86d91cb14e26e51e64b993ac063d102992258e15487d2013f6",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed0_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json": "77ac490fb52d9af0f884a73d49aa717c46ed89c454c81e86692d1f1c32193336",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed0_epoch_50_val/hydra/.hydra/config.yaml": "35f1ebe53d6dd623787da0a02d5c6a666564b79433db23008e54d48724a5b9c2",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed0_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json": "8cf024256447b038a2fa912e0d3837dea637c4998a940406746b7448ce154977",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed0_last_val/hydra/.hydra/config.yaml": "d52c1f0b28b0adc878a86597aa32d83a50a925b2ba8ca486c4baa0223a3a3ab3",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av100k_seed0/train/checkpoints/last.pt": "7657a83fc71332a822b8eee24296da97d82806a6dc61f02bb1a96e2174d88cf6",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed1_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json": "fdeba22801b47919959e7900850a2679a3b0c09c62474110d58726832cb3dd87",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed1_epoch_10_val/hydra/.hydra/config.yaml": "fdec0bbc4e58b97c258e1c3e7ec22fe699cd717d34cc90b81434c55a9f113f6d",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed1_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json": "69fdd5707d23c01f633ec42ff9b55ae63f17bde4abb0afe280a2c0cd1a2bfb50",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed1_epoch_120_val/hydra/.hydra/config.yaml": "203be8b6608e1ea4b9c5e181e8477853519c8c43ac90010c60dc76108cc3910e",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed1_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json": "6a550c43683705ea870cbd741bedd1ec410481bcbaf46612841b138401235b9b",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed1_epoch_50_val/hydra/.hydra/config.yaml": "0074d52b8d1e924e749e0ae6a4f94c1c44c860ecf8a7663f157ca9f8288803ea",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed1_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json": "96e7672d9eb222adff4786a76b658498820387b6c57c261e683e9ac770b970ec",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/ft_mit_av100k_seed1_last_val/hydra/.hydra/config.yaml": "06095ca71225bb4ce9b37e0b4c5326b141f16815e009bef13b7b843ed6ab652b",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/runs_thesis_v2/ft_mit_av100k_seed1/train/checkpoints/epoch_120.pt": "84c3e40471661cf29fd0462d0ea5f71d65687db990ace1801dbc7b1e7276c511",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed0_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json": "71b83af597a630f1fe183446f957b196e044605e58e8d2b25782805529e5f30b",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed0_epoch_10_val/hydra/.hydra/config.yaml": "2cdb899d5d2dd0a1d4e3aefdd5045706a9ab5c80dc0b1d987ebbb61893816401",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed0_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json": "146a4504003756920a5a04f1b9cb2e4da889d457918f841ca263dc05303e4837",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed0_epoch_120_val/hydra/.hydra/config.yaml": "cabedd13053b8b7027e9a5cdc9200a3c518b0629c6410c8b98bb688ff7ac3d1f",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed0_epoch_170_val/results/metrics_epoch_170/metrics_MIT1003Dataset_test.json": "d793319b281140a6fef2daf9e2e86077bcaa2b1585dfd0d6635d84d2ef61b02e",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed0_epoch_170_val/hydra/.hydra/config.yaml": "520aef5fa8a3da26af4930226b0144d13b7e3da4b7efed3e03eb4c5eb8db38a5",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed0_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json": "ae3b77edbe2eccf872a6771702b09a5198f5473f4a2f45e93b53eb3851a0d1a1",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed0_epoch_50_val/hydra/.hydra/config.yaml": "2e6e6335f0bc2ceba635b4bb4c54c939ff64d4d271a78097d2e712518fa3b1e1",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed0_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json": "01f94562b0d4a90750682a23239a1aa1fa8eb10ea73d360f424bb9c028315b49",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed0_last_val/hydra/.hydra/config.yaml": "53c60d94fef2e810969de2007152150c6b901eedb4b57df965ba62424d81b7bd",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/r1_official_recipe_seed0/train/checkpoints/epoch_170.pt": "ac06912a91b86f101c32a69f4d9f0b54f376933ae61aa0ebe523d0cffd22bbe8",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed1_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json": "96c386d76d3a8e6f8d5edce3dd11053a26913910bdcdf815ac7912fd2d9daa56",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed1_epoch_10_val/hydra/.hydra/config.yaml": "3d9dc13ff6386c5bd88a5cbd756dfb735fe0046c8f7dec1e4252e79704dcf7c3",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed1_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json": "8252011e16a49274d081c08ff7180143404e3fa675051ea15f52be8c0f32953e",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed1_epoch_120_val/hydra/.hydra/config.yaml": "b47cb24d0cd85341e9dff79f2316338dc13c0a475bf8c69d3b404eba676b1daf",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed1_epoch_170_val/results/metrics_epoch_170/metrics_MIT1003Dataset_test.json": "9e136c756d53a1932666dce76b511de93fcff8dd13e4ef81dac3b04356e5403b",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed1_epoch_170_val/hydra/.hydra/config.yaml": "793eed4cc28601dfa7e771b458a159c6afc9daa0070e036be4b0a73957b38d83",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed1_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json": "2bef64fe5915902e24faaffede47b79111517a57cf578e28721e90989ed8dff3",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed1_epoch_50_val/hydra/.hydra/config.yaml": "e139192386ab89456d320aec3e9d26cbe4e330e7474db0c2ccc9887fc2897d5d",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed1_last_val/results/metrics_epoch_198/metrics_MIT1003Dataset_test.json": "10b657653810f2f545e2e22f807a36c4f32bf456ddc1b6528f0cc0e32a8154da",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/r1_official_recipe_seed1_last_val/hydra/.hydra/config.yaml": "5e64892a80d71f9262399dea01f6381ab068605e9f473a764d3b72483044aeec",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/r1_official_recipe_seed1/train/checkpoints/epoch_50.pt": "eaccf6c136c4f1873427c4de096adb6aa17c530bb6ec5234d81a95a675b5a343",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed0_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json": "d8b4f91d09187590e6db874903322637445972542dd71bfb78d6479d9ac54cbc",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed0_epoch_10_val/hydra/.hydra/config.yaml": "db149509ba5c94475c9177bf6eb17c1abce779f0f2adc8229d3d2c93bec0f5f3",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed0_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json": "073fa250280234d94ccbe1a8009b9ad13e83ddbf2ef4cdbebad1ad0103c6fbf7",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed0_epoch_120_val/hydra/.hydra/config.yaml": "3095e290c01f4f5a28556680632ba3e38ad7181a13222a70da67ab30498dd385",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed0_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json": "7304e196ea5a13f016cd4e2d2d3d50625d9c5dd3fea04d64bf6accca4daf323c",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed0_epoch_50_val/hydra/.hydra/config.yaml": "e8992cfcb735f55be60186a0c2ed039ca61a73b5e7f4f5e9e5270af70656abbd",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed0_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json": "a77ad57dafe95f1312b709bc40ee7345a0f5b85b5623f89b05008b62a593e95e",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed0_last_val/hydra/.hydra/config.yaml": "110b2a695d4ac5b1e4e3373acade49ed439ecd7259a1f1dbba0feffef1760a13",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/armB_joint_avinit_seed0/train/checkpoints/epoch_120.pt": "ae4c9f16d6f8b9f3a7989d25b34518446a4b60603413485709642406777a03a7",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed1_epoch_10_val/results/metrics_epoch_10/metrics_MIT1003Dataset_test.json": "d5c47789daa331c8ab936ad352a3b402105cd030b00bbb9e44db5336cc2de42f",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed1_epoch_10_val/hydra/.hydra/config.yaml": "d6391e68fff30c1d653fa2545a4b5d450e8d3d148f8a37befc097a6c0f2e659d",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed1_epoch_120_val/results/metrics_epoch_120/metrics_MIT1003Dataset_test.json": "f02d62331abefdd5c6b7868b59e942ddc61eb8897c8eeb6273bf46e8aef58eab",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed1_epoch_120_val/hydra/.hydra/config.yaml": "7c908c96a6d7dd4a138aecf070763d6cccd85c384552be3d5e869fd98c3733d5",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed1_epoch_50_val/results/metrics_epoch_50/metrics_MIT1003Dataset_test.json": "8d9ca1e37d8d3998ee0ce0854f1fa3ed894e45f7fbdd60cbf4c599a60ceebb62",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed1_epoch_50_val/hydra/.hydra/config.yaml": "094a5dceb197c73d0396e084910d288cc83675cd20cbe116625b3ac1f7ac02f9",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed1_last_val/results/metrics_epoch_199/metrics_MIT1003Dataset_test.json": "6227cef031236a8208f04174eb3a18feac75bd4614dcef54a9484b8b09227445",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/data/eval/ft_valscore/armB_joint_avinit_seed1_last_val/hydra/.hydra/config.yaml": "16928df69062163d7626437bba8b93b684110d7482166e3f3cc01979e8e682a8",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/armB_joint_avinit_seed1/train/checkpoints/epoch_50.pt": "956a7ac46e1c9d119c3032d84cf68be8997b4f972f887845b8c97e639e6550a9",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/data/mit1003_fixations_train.json": "8e7d66328d96db446a6cbb4f2aafc5f71aef27d5f6b62275e30473155772520e",
+    "/mnt/vast-nhr/projects/nim00018/tom/scandiff/paper_reproduction/data/mit1003_fixations_validation.json": "f23c37423d3e4c39ebf0c1e52a9afbcfdebf0ce218b420b0f1fcf6510f2721a2"
+  },
+  "selection": "Lowest mean rank of duration-free four-component MM-KLD and ScanMatchNoDur KLD; earlier checkpoint breaks ties; last sorts last.",
+  "sampling_seed": 0,
+  "diffusion_steps": 1000,
+  "limitations": [
+    "Existing validation outputs have no source-code hash; current scorer and sampler are frozen at adoption.",
+    "Image feature contents are not hashed."
+  ]
+}

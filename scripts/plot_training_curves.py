@@ -1,162 +1,114 @@
+"""Training curves for all fine-tuning conditions (scratch, 100k, 200k, 400k, 800k).
+Reads per-fold log.csv files from CV runs.
+Outputs:
+  runs/viz/fig_training_curves.png  — val LL mean ± 1 std for all conditions
+  runs/viz/fig_training_overfit.png — per-condition train vs val LL (overfitting check)
 """
-Plot validation training curves for all models.
-Reads directly from SLURM log files.
-"""
-
-import re
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import numpy as np
+import csv, statistics as st
 from pathlib import Path
+import numpy as np
+import matplotlib; matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 
-# ---------------------------------------------------------------------------
-# data
-# ---------------------------------------------------------------------------
+ROOT = Path(__file__).resolve().parent.parent
 
-# {model_name: {step: {metric: value}}}
-logs = {
-    "base": """
-epoch 001 | step 025000 | val kl=2.4200 | val ll=-6.1955 | val nss=3.8830 | val auc=0.9381
-epoch 002 | step 050000 | val kl=2.4070 | val ll=-6.1048 | val nss=4.1250 | val auc=0.9420
-epoch 003 | step 075000 | val kl=2.3942 | val ll=-6.0695 | val nss=4.2263 | val auc=0.9436
-epoch 004 | step 100000 | val kl=2.4332 | val ll=-6.0553 | val nss=4.2859 | val auc=0.9444
-epoch 005 | step 125000 | val kl=2.3945 | val ll=-6.0270 | val nss=4.3534 | val auc=0.9454
-epoch 006 | step 150000 | val kl=2.4111 | val ll=-6.0249 | val nss=4.3667 | val auc=0.9456
-epoch 007 | step 175000 | val kl=2.3941 | val ll=-6.0051 | val nss=4.4234 | val auc=0.9463
-epoch 008 | step 200000 | val kl=2.4028 | val ll=-6.0000 | val nss=4.4284 | val auc=0.9465
-epoch 009 | step 225000 | val kl=2.4212 | val ll=-5.9992 | val nss=4.4394 | val auc=0.9468
-epoch 010 | step 250000 | val kl=2.4240 | val ll=-5.9901 | val nss=4.4678 | val auc=0.9471
-epoch 011 | step 275000 | val kl=2.4149 | val ll=-5.9832 | val nss=4.4828 | val auc=0.9472
-epoch 012 | step 300000 | val kl=2.4500 | val ll=-5.9882 | val nss=4.4774 | val auc=0.9473
-epoch 013 | step 325000 | val kl=2.4464 | val ll=-5.9860 | val nss=4.4800 | val auc=0.9474
-epoch 014 | step 350000 | val kl=2.4524 | val ll=-5.9874 | val nss=4.4794 | val auc=0.9474
-epoch 015 | step 375000 | val kl=2.4573 | val ll=-5.9889 | val nss=4.4760 | val auc=0.9474
-""",
-    "patchpos": """
-epoch 001 | step 025000 | val kl=2.4376 | val ll=-6.1750 | val nss=3.9614 | val auc=0.9390
-epoch 002 | step 050000 | val kl=2.4061 | val ll=-6.0857 | val nss=4.1909 | val auc=0.9428
-epoch 003 | step 075000 | val kl=2.3909 | val ll=-6.0470 | val nss=4.3131 | val auc=0.9444
-epoch 004 | step 100000 | val kl=2.4259 | val ll=-6.0303 | val nss=4.3813 | val auc=0.9452
-epoch 005 | step 125000 | val kl=2.3956 | val ll=-6.0010 | val nss=4.4467 | val auc=0.9464
-epoch 006 | step 150000 | val kl=2.4003 | val ll=-5.9987 | val nss=4.4580 | val auc=0.9465
-epoch 007 | step 175000 | val kl=2.3922 | val ll=-5.9870 | val nss=4.4973 | val auc=0.9469
-epoch 008 | step 200000 | val kl=2.3967 | val ll=-5.9787 | val nss=4.5156 | val auc=0.9473
-epoch 009 | step 225000 | val kl=2.4225 | val ll=-5.9747 | val nss=4.5312 | val auc=0.9476
-""",
-    "visfeat": """
-epoch 001 | step 025000 | val kl=2.3024 | val ll=-6.2744 | val nss=3.7186 | val auc=0.9358
-epoch 002 | step 050000 | val kl=2.2452 | val ll=-6.1979 | val nss=3.8954 | val auc=0.9396
-epoch 003 | step 075000 | val kl=2.2245 | val ll=-6.1700 | val nss=3.9465 | val auc=0.9412
-epoch 004 | step 100000 | val kl=2.2172 | val ll=-6.1496 | val nss=4.0035 | val auc=0.9419
-epoch 005 | step 125000 | val kl=2.2035 | val ll=-6.1466 | val nss=4.0166 | val auc=0.9427
-epoch 006 | step 150000 | val kl=2.1971 | val ll=-6.1309 | val nss=4.0515 | val auc=0.9430
-epoch 007 | step 175000 | val kl=2.1896 | val ll=-6.1253 | val nss=4.0793 | val auc=0.9437
-epoch 008 | step 200000 | val kl=2.1849 | val ll=-6.1200 | val nss=4.0877 | val auc=0.9440
-epoch 009 | step 225000 | val kl=2.1836 | val ll=-6.1138 | val nss=4.0977 | val auc=0.9440
-epoch 010 | step 250000 | val kl=2.1803 | val ll=-6.1071 | val nss=4.1183 | val auc=0.9441
-epoch 011 | step 275000 | val kl=2.1781 | val ll=-6.1045 | val nss=4.1234 | val auc=0.9443
-""",
-}
-
-# ---------------------------------------------------------------------------
-# parse
-# ---------------------------------------------------------------------------
-
-def parse_log(text: str) -> dict:
-    pattern = re.compile(
-        r"step\s+(\d+)\s+\|.*?val kl=([\d.]+).*?val ll=(-?[\d.]+).*?val nss=([\d.]+).*?val auc=([\d.]+)"
-    )
-    data = {"step": [], "kl": [], "ll": [], "nss": [], "auc": []}
-    for m in pattern.finditer(text):
-        data["step"].append(int(m.group(1)))
-        data["kl"].append(float(m.group(2)))
-        data["ll"].append(float(m.group(3)))
-        data["nss"].append(float(m.group(4)))
-        data["auc"].append(float(m.group(5)))
-    return {k: np.array(v) for k, v in data.items()}
-
-parsed = {name: parse_log(text) for name, text in logs.items()}
-
-# ---------------------------------------------------------------------------
-# colours & labels
-# ---------------------------------------------------------------------------
-
-colours = {
-    "base":     "#2196F3",   # blue
-    "patchpos": "#FF9800",   # orange
-    "visfeat":  "#4CAF50",   # green
-}
-
-display_names = {
-    "base":     "Base",
-    "patchpos": "Base + PatchPos",
-    "visfeat":  "Base + VisFeat",
-}
-
-# ---------------------------------------------------------------------------
-# plot
-# ---------------------------------------------------------------------------
-
-metrics = [
-    ("ll",  "Val LL (log-prob, ↑ better)",  False),
-    ("nss", "Val NSS (↑ better)",           False),
-    ("auc", "Val AUC (↑ better)",           False),
-    ("kl",  "Val KL (↓ better)",            True),
+CONDS = [
+    ("scratch", "ftcv_scratch", "#9AA0A6", "from scratch"),
+    ("100k",    "ftcv_100k",    "#93C5FD", "100k pretrain"),
+    ("200k",    "ftcv_200k",    "#2563EB", "200k pretrain"),
+    ("400k",    "ftcv_400k",    "#1D4ED8", "400k pretrain"),
+    ("800k",    "ftcv_800k",    "#1E3A8A", "800k pretrain"),
 ]
+N_FOLDS = 10
 
-fig, axes = plt.subplots(1, 4, figsize=(16, 4))
-fig.suptitle("Validation metrics across training — 200k images, LL loss, cosine LR",
-             fontsize=11, y=1.01)
+plt.rcParams.update({
+    "figure.dpi": 130, "savefig.dpi": 200, "figure.facecolor": "white",
+    "font.size": 12, "axes.labelsize": 12.5, "axes.labelweight": "medium",
+    "xtick.labelsize": 10.5, "ytick.labelsize": 10.5,
+    "axes.spines.top": False, "axes.spines.right": False,
+    "axes.linewidth": 1.1, "axes.edgecolor": "#444",
+    "axes.grid": True, "grid.color": "#E9E9E9", "font.family": "DejaVu Sans",
+})
 
-for ax, (metric, ylabel, invert) in zip(axes, metrics):
-    for name, d in parsed.items():
-        steps_k = d["step"] / 1000
-        ax.plot(steps_k, d[metric],
-                color=colours[name],
-                label=display_names[name],
-                linewidth=2,
-                marker="o", markersize=4)
+def load_fold(run_dir, fold):
+    """Return (train_steps, train_ll), (val_steps, val_ll) — both sorted by step."""
+    p = ROOT / "runs" / run_dir / f"fold{fold}" / "log.csv"
+    if not p.exists():
+        return None, None
+    tr_s, tr_v, va_s, va_v = [], [], [], []
+    for row in csv.DictReader(p.open()):
+        try:
+            step = int(row["step"])
+            ll   = float(row["ll"])
+        except (KeyError, ValueError):
+            continue
+        split = row.get("split", "")
+        if split == "train":
+            tr_s.append(step); tr_v.append(ll)
+        elif split == "val":
+            va_s.append(step); va_v.append(ll)
+    return (tr_s, tr_v), (va_s, va_v)
 
-    ax.set_xlabel("Training steps (×1000)", fontsize=9)
-    ax.set_ylabel(ylabel, fontsize=9)
-    ax.set_title(metric.upper(), fontsize=10, fontweight="bold")
-    ax.legend(fontsize=8)
-    ax.grid(True, alpha=0.3)
-    if invert:
-        ax.invert_yaxis()
-    ax.tick_params(labelsize=8)
+def mean_std_curves(run_dir, split="val"):
+    """Mean ± pstdev of LL across all 10 folds at each logged step."""
+    bucket = {}   # step -> [values]
+    for f in range(N_FOLDS):
+        tr, va = load_fold(run_dir, f)
+        data = va if split == "val" else tr
+        if data is None or not data[0]:
+            continue
+        for s, v in zip(*data):
+            bucket.setdefault(s, []).append(v)
+    steps = sorted(s for s, vs in bucket.items() if len(vs) == N_FOLDS)
+    if not steps:
+        return np.array([]), np.array([]), np.array([])
+    means = np.array([st.mean(bucket[s]) for s in steps])
+    stds  = np.array([st.pstdev(bucket[s]) for s in steps])
+    return np.array(steps), means, stds
 
-plt.tight_layout()
+# ── Figure 1: val LL all conditions ─────────────────────────────────────────
+fig, ax = plt.subplots(figsize=(9, 5), constrained_layout=True)
+for key, run_dir, color, label in CONDS:
+    xs, means, stds = mean_std_curves(run_dir, "val")
+    if len(xs) == 0:
+        print(f"  WARNING: no data for {key}"); continue
+    ax.plot(xs, means, color=color, lw=2.4, label=label, zorder=4)
+    ax.fill_between(xs, means - stds, means + stds, color=color, alpha=0.18, zorder=3)
 
-out_path = Path("runs/viz/training_curves.png")
-out_path.parent.mkdir(parents=True, exist_ok=True)
-plt.savefig(out_path, dpi=150, bbox_inches="tight")
-print(f"saved {out_path}")
-plt.close()
+ax.set_xlabel("training step")
+ax.set_ylabel("validation LL  (bits/fix, ↑ better)")
+ax.legend(loc="lower right", fontsize=11, framealpha=0.9)
+ax.set_axisbelow(True); ax.tick_params(length=4, color="#888")
+ax.text(0.99, 0.02, "mean ± 1 std across 10 CV folds",
+        transform=ax.transAxes, ha="right", va="bottom", fontsize=9, color="#999")
+out1 = ROOT / "runs/viz/fig_training_curves.png"
+fig.savefig(out1); fig.savefig(out1.with_suffix(".pdf"))
+plt.close(fig); print(f"saved {out1}")
 
-# ---------------------------------------------------------------------------
-# also save individual per-metric figures (cleaner for reading)
-# ---------------------------------------------------------------------------
-
-for metric, ylabel, invert in metrics:
-    fig, ax = plt.subplots(figsize=(6, 4))
-    for name, d in parsed.items():
-        steps_k = d["step"] / 1000
-        ax.plot(steps_k, d[metric],
-                color=colours[name],
-                label=display_names[name],
-                linewidth=2,
-                marker="o", markersize=4)
-    ax.set_xlabel("Training steps (×1000)", fontsize=10)
-    ax.set_ylabel(ylabel, fontsize=10)
-    ax.set_title(f"Validation {metric.upper()} over training", fontsize=11)
-    ax.legend(fontsize=9)
-    ax.grid(True, alpha=0.3)
-    if invert:
-        ax.invert_yaxis()
-    plt.tight_layout()
-    p = Path(f"runs/viz/training_curve_{metric}.png")
-    plt.savefig(p, dpi=150, bbox_inches="tight")
-    print(f"saved {p}")
-    plt.close()
+# ── Figure 2: train vs val LL per condition (overfitting check) ───────────────
+fig, axes = plt.subplots(1, 5, figsize=(19, 4.2), constrained_layout=True, sharey=True)
+for ax, (key, run_dir, color, label) in zip(axes, CONDS):
+    xs_v, m_v, s_v = mean_std_curves(run_dir, "val")
+    xs_t, m_t, s_t = mean_std_curves(run_dir, "train")
+    if len(xs_v) == 0:
+        ax.set_title(label + "\n(no data)", fontsize=10); continue
+    # val — solid
+    ax.plot(xs_v, m_v, color=color, lw=2.2, zorder=4)
+    ax.fill_between(xs_v, m_v - s_v, m_v + s_v, color=color, alpha=0.15)
+    # train — dashed, slightly transparent
+    ax.plot(xs_t, m_t, color=color, lw=1.4, ls="--", alpha=0.75, zorder=3)
+    ax.fill_between(xs_t, m_t - s_t, m_t + s_t, color=color, alpha=0.07)
+    ax.set_title(label, fontsize=11, fontweight="medium")
+    ax.set_xlabel("step", fontsize=10); ax.set_axisbelow(True)
+    ax.tick_params(length=3, color="#888")
+axes[0].set_ylabel("LL  (bits/fix, ↑ better)")
+# shared legend on last panel
+axes[-1].plot([], [], color="#555", lw=2.2,            label="val  (solid)")
+axes[-1].plot([], [], color="#555", lw=1.4, ls="--",   label="train (dashed)")
+axes[-1].legend(loc="lower right", fontsize=9.5, framealpha=0.9)
+fig.suptitle("Train vs validation LL — mean ± 1 std across 10 folds  (no overfitting signal)",
+             fontsize=12, y=1.01)
+out2 = ROOT / "runs/viz/fig_training_overfit.png"
+fig.savefig(out2, bbox_inches="tight")
+fig.savefig(out2.with_suffix(".pdf"), bbox_inches="tight")
+plt.close(fig); print(f"saved {out2}")
